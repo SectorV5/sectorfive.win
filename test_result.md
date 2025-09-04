@@ -197,6 +197,18 @@
         - working: true
           agent: "testing"
           comment: "Contact form fully tested: message submission (no auth required), admin message retrieval, multiple submissions all working correctly"
+  
+  - task: "Settings Management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Settings management fully tested: get settings, update settings (max file size, site title, site email), settings persistence all working correctly"
 
 ## frontend:
   - task: "Retro UI Design"
