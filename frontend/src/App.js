@@ -988,6 +988,339 @@ const AdminBlog = () => {
   );
 };
 
+const AdminGallery = () => {
+  const [galleryData, setGalleryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState('');
+  const [selectedTags, setSelectedTags] = useState('');
+  const [page, setPage] = useState(1);
+  const [allTags, setAllTags] = useState([]);
+  const [uploadForm, setUploadForm] = useState({
+    title: '',
+    description: '',
+    tags: '',
+    is_featured: false
+  });
+
+  useEffect(() => {
+    fetchImages();
+    fetchTags();
+  }, [search, selectedTags, page]);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '12'
+      });
+      if (search) params.append('search', search);
+      if (selectedTags) params.append('tags', selectedTags);
+      
+      const response = await apiCall(`/gallery?${params}`);
+      setGalleryData(response.data);
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const response = await apiCall('/gallery/tags');
+      setAllTags(response.data || []);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!e.target.file.files[0]) return;
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', e.target.file.files[0]);
+      formData.append('title', uploadForm.title);
+      formData.append('description', uploadForm.description || '');
+      formData.append('tags', uploadForm.tags);
+      formData.append('is_featured', uploadForm.is_featured);
+      
+      await apiCall('/gallery', {
+        method: 'POST',
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setUploadForm({ title: '', description: '', tags: '', is_featured: false });
+      e.target.reset();
+      fetchImages();
+      fetchTags();
+      alert('Image uploaded successfully!');
+    } catch (error) {
+      alert('Error uploading image: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (imageId) => {
+    if (!window.confirm('Delete this image? This action cannot be undone.')) return;
+    
+    try {
+      await apiCall(`/gallery/${imageId}`, { method: 'DELETE' });
+      fetchImages();
+      fetchTags();
+      alert('Image deleted successfully!');
+    } catch (error) {
+      alert('Error deleting image: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editing) return;
+    
+    try {
+      const updateData = {
+        title: editing.title,
+        description: editing.description,
+        tags: editing.tags || [],
+        is_featured: editing.is_featured
+      };
+      
+      await apiCall(`/gallery/${editing.id}`, {
+        method: 'PUT',
+        data: updateData
+      });
+      
+      setEditing(null);
+      fetchImages();
+      fetchTags();
+      alert('Image updated successfully!');
+    } catch (error) {
+      alert('Error updating image: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  if (loading && !galleryData) return <div>Loading gallery...</div>;
+
+  return (
+    <div className="admin-section">
+      <h3>🖼️ Gallery Management</h3>
+      
+      {/* Upload Form */}
+      <div className="admin-subsection">
+        <h4>Upload New Image</h4>
+        <form onSubmit={handleUpload} className="upload-form">
+          <div className="form-group">
+            <label>Select Image:</label>
+            <input type="file" name="file" accept="image/*" required className="retro-input" />
+          </div>
+          <div className="form-group">
+            <label>Title:</label>
+            <input 
+              type="text" 
+              value={uploadForm.title} 
+              onChange={(e) => setUploadForm({...uploadForm, title: e.target.value})} 
+              required 
+              className="retro-input" 
+            />
+          </div>
+          <div className="form-group">
+            <label>Description:</label>
+            <textarea 
+              value={uploadForm.description} 
+              onChange={(e) => setUploadForm({...uploadForm, description: e.target.value})} 
+              className="retro-textarea" 
+              rows="3"
+            />
+          </div>
+          <div className="form-group">
+            <label>Tags (comma-separated):</label>
+            <input 
+              type="text" 
+              value={uploadForm.tags} 
+              onChange={(e) => setUploadForm({...uploadForm, tags: e.target.value})} 
+              className="retro-input" 
+              placeholder="nature, landscape, photography"
+            />
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={uploadForm.is_featured} 
+                onChange={(e) => setUploadForm({...uploadForm, is_featured: e.target.checked})} 
+              />
+              Featured Image
+            </label>
+          </div>
+          <RetroButton type="submit" disabled={uploading}>
+            {uploading ? '📤 Uploading...' : '📤 Upload Image'}
+          </RetroButton>
+        </form>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="admin-controls">
+        <input 
+          type="text" 
+          placeholder="Search images..." 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          className="retro-input" 
+        />
+        <input 
+          type="text" 
+          placeholder="Filter by tags..." 
+          value={selectedTags} 
+          onChange={(e) => setSelectedTags(e.target.value)} 
+          className="retro-input" 
+        />
+      </div>
+
+      {/* Tag Cloud */}
+      {allTags.length > 0 && (
+        <div className="tag-cloud">
+          <h4>Available Tags:</h4>
+          <div className="tags">
+            {allTags.slice(0, 15).map(tag => (
+              <span 
+                key={tag.name} 
+                className={`tag ${selectedTags.includes(tag.name) ? 'active' : ''}`}
+                onClick={() => {
+                  if (selectedTags.includes(tag.name)) {
+                    setSelectedTags(selectedTags.replace(tag.name, '').replace(/,\s*,/g, ',').replace(/^,|,$/g, ''));
+                  } else {
+                    setSelectedTags(selectedTags ? `${selectedTags}, ${tag.name}` : tag.name);
+                  }
+                }}
+              >
+                {tag.name} ({tag.count})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Form */}
+      {editing && (
+        <div className="admin-subsection">
+          <h4>Edit Image: {editing.title}</h4>
+          <form onSubmit={handleUpdate}>
+            <div className="form-group">
+              <label>Title:</label>
+              <input 
+                type="text" 
+                value={editing.title} 
+                onChange={(e) => setEditing({...editing, title: e.target.value})} 
+                required 
+                className="retro-input" 
+              />
+            </div>
+            <div className="form-group">
+              <label>Description:</label>
+              <textarea 
+                value={editing.description || ''} 
+                onChange={(e) => setEditing({...editing, description: e.target.value})} 
+                className="retro-textarea" 
+                rows="3"
+              />
+            </div>
+            <div className="form-group">
+              <label>Tags (comma-separated):</label>
+              <input 
+                type="text" 
+                value={editing.tags ? editing.tags.join(', ') : ''} 
+                onChange={(e) => setEditing({...editing, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t)})} 
+                className="retro-input" 
+              />
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={editing.is_featured} 
+                  onChange={(e) => setEditing({...editing, is_featured: e.target.checked})} 
+                />
+                Featured Image
+              </label>
+            </div>
+            <div className="admin-controls">
+              <RetroButton type="submit">Update Image</RetroButton>
+              <RetroButton type="button" onClick={() => setEditing(null)}>Cancel</RetroButton>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Gallery Grid */}
+      {galleryData && galleryData.images.length > 0 ? (
+        <>
+          <div className="admin-gallery-grid">
+            {galleryData.images.map(image => (
+              <div key={image.id} className="admin-gallery-item">
+                <div className="image-container">
+                  <img src={image.file_url} alt={image.title} />
+                  {image.is_featured && <div className="featured-badge">⭐ Featured</div>}
+                </div>
+                <div className="image-info">
+                  <h5>{image.title}</h5>
+                  {image.description && <p className="description">{image.description}</p>}
+                  {image.tags && image.tags.length > 0 && (
+                    <div className="image-tags">
+                      {image.tags.map(tag => (
+                        <span key={tag} className="tag">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="image-meta">
+                    📅 {new Date(image.created_at).toLocaleDateString()}
+                    {image.uploaded_by && <span> • 👤 {image.uploaded_by}</span>}
+                  </div>
+                  <div className="admin-controls">
+                    <RetroButton onClick={() => setEditing(image)}>Edit</RetroButton>
+                    <RetroButton onClick={() => handleDelete(image.id)}>Delete</RetroButton>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {galleryData.pagination && galleryData.pagination.total_pages > 1 && (
+            <div className="pagination">
+              <button 
+                onClick={() => setPage(Math.max(1, page - 1))} 
+                disabled={page === 1}
+              >
+                Previous
+              </button>
+              <span className="current-page">
+                Page {galleryData.pagination.current_page} of {galleryData.pagination.total_pages}
+              </span>
+              <button 
+                onClick={() => setPage(Math.min(galleryData.pagination.total_pages, page + 1))} 
+                disabled={page === galleryData.pagination.total_pages}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="empty-state">
+          <p>No images in gallery. Upload some images to get started!</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
   const [search, setSearch] = useState('');
