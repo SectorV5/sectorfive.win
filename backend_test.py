@@ -39,6 +39,124 @@ class BackendTester:
         if details:
             print(f"    Details: {details}")
     
+    def test_admin_onboarding_flow(self):
+        """Test the complete admin onboarding flow with credential changes"""
+        print("\n=== Testing Admin Onboarding Flow ===")
+        
+        # Test 1: Initial login with default admin credentials
+        try:
+            login_data = {
+                "username": "admin",
+                "password": "admin"
+            }
+            response = requests.post(f"{self.base_url}/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and data.get("must_change_password") == True:
+                    self.token = data["access_token"]
+                    self.auth_headers = {"Authorization": f"Bearer {self.token}"}
+                    self.log_result("Admin Onboarding - Initial Login", True, "Successfully logged in with default admin credentials, must_change_password=true")
+                else:
+                    self.log_result("Admin Onboarding - Initial Login", False, "Login response missing required fields or must_change_password not true", str(data))
+            else:
+                self.log_result("Admin Onboarding - Initial Login", False, f"Initial login failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Admin Onboarding - Initial Login", False, "Initial login request failed", str(e))
+        
+        # Test 2: Check /me endpoint returns must_change_password=true
+        if self.token:
+            try:
+                response = requests.get(f"{self.base_url}/me", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    user_data = response.json()
+                    if user_data.get("must_change_password") == True and user_data.get("username") == "admin":
+                        self.log_result("Admin Onboarding - Me Endpoint Check", True, "Me endpoint correctly returns must_change_password=true for admin")
+                    else:
+                        self.log_result("Admin Onboarding - Me Endpoint Check", False, "Me endpoint response incorrect", str(user_data))
+                else:
+                    self.log_result("Admin Onboarding - Me Endpoint Check", False, f"Me endpoint failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Admin Onboarding - Me Endpoint Check", False, "Me endpoint request failed", str(e))
+        
+        # Test 3: Change credentials using /change-credentials
+        if self.token:
+            try:
+                change_data = {
+                    "old_password": "admin",
+                    "new_username": "newadmin",
+                    "new_password": "newpass"
+                }
+                response = requests.post(f"{self.base_url}/change-credentials", data=change_data, headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Admin Onboarding - Change Credentials", True, "Successfully changed admin credentials")
+                    else:
+                        self.log_result("Admin Onboarding - Change Credentials", False, "Change credentials response missing message", str(result))
+                else:
+                    self.log_result("Admin Onboarding - Change Credentials", False, f"Change credentials failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Admin Onboarding - Change Credentials", False, "Change credentials request failed", str(e))
+        
+        # Test 4: Login with new credentials
+        try:
+            new_login_data = {
+                "username": "newadmin",
+                "password": "newpass"
+            }
+            response = requests.post(f"{self.base_url}/login", json=new_login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and data.get("must_change_password") == False:
+                    new_token = data["access_token"]
+                    new_auth_headers = {"Authorization": f"Bearer {new_token}"}
+                    self.log_result("Admin Onboarding - New Credentials Login", True, "Successfully logged in with new credentials, must_change_password=false")
+                    
+                    # Update token for further tests
+                    self.token = new_token
+                    self.auth_headers = new_auth_headers
+                else:
+                    self.log_result("Admin Onboarding - New Credentials Login", False, "New login response incorrect", str(data))
+            else:
+                self.log_result("Admin Onboarding - New Credentials Login", False, f"New credentials login failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Admin Onboarding - New Credentials Login", False, "New credentials login request failed", str(e))
+        
+        # Test 5: Verify /me endpoint with new credentials shows must_change_password=false
+        if self.token:
+            try:
+                response = requests.get(f"{self.base_url}/me", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    user_data = response.json()
+                    if user_data.get("must_change_password") == False and user_data.get("username") == "newadmin":
+                        self.log_result("Admin Onboarding - Final Me Check", True, "Me endpoint correctly shows must_change_password=false for newadmin")
+                    else:
+                        self.log_result("Admin Onboarding - Final Me Check", False, "Final me endpoint response incorrect", str(user_data))
+                else:
+                    self.log_result("Admin Onboarding - Final Me Check", False, f"Final me endpoint failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Admin Onboarding - Final Me Check", False, "Final me endpoint request failed", str(e))
+        
+        # Test 6: Verify old admin credentials no longer work
+        try:
+            old_login_data = {
+                "username": "admin",
+                "password": "admin"
+            }
+            response = requests.post(f"{self.base_url}/login", json=old_login_data)
+            
+            if response.status_code == 401:
+                self.log_result("Admin Onboarding - Old Credentials Rejected", True, "Old admin credentials correctly rejected after change")
+            else:
+                self.log_result("Admin Onboarding - Old Credentials Rejected", False, f"Old credentials should be rejected, got status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Admin Onboarding - Old Credentials Rejected", False, "Old credentials rejection test failed", str(e))
+
     def test_authentication_system(self):
         """Test the complete authentication system"""
         print("\n=== Testing Authentication System ===")
