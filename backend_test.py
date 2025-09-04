@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Sectorfive Personal Website
-Tests all backend API endpoints including authentication, CRUD operations, file uploads, analytics, and more.
+Enhanced Backend Testing for Sectorfive Personal Website
+Tests enhanced user management, permissions system, and backup functionality.
 """
 
 import requests
