@@ -125,14 +125,54 @@ class Analytics(BaseModel):
 
 class Settings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    # Basic Settings
     max_file_size: int = 5368709120  # 5GB in bytes
     site_title: str = "Sectorfive Personal Website"
     site_email: str = "admin@sectorfive.win"
     contact_cooldown: int = 300  # 5 minutes in seconds
+    
     # Appearance
     background_type: str = "default"  # default | color | gradient | image
     background_value: Optional[str] = None
     background_image_url: Optional[str] = None
+    
+    # Theme Customization
+    primary_color: str = "#007bff"
+    secondary_color: str = "#6c757d"
+    accent_color: str = "#28a745"
+    font_family: str = "Arial, sans-serif"
+    custom_css: Optional[str] = None
+    
+    # SEO Settings
+    meta_description: str = "Sectorfive Personal Website"
+    meta_keywords: str = "personal, website, blog, portfolio"
+    google_analytics_id: Optional[str] = None
+    google_search_console: Optional[str] = None
+    robots_txt: str = "User-agent: *\nAllow: /"
+    
+    # Social Media Links
+    facebook_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    youtube_url: Optional[str] = None
+    
+    # Email Notification Settings
+    smtp_server: Optional[str] = None
+    smtp_port: int = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_use_tls: bool = True
+    notification_email: Optional[str] = None
+    notify_on_contact: bool = False
+    notify_on_new_blog: bool = False
+    
+    # Blog Settings
+    posts_per_page: int = 10
+    enable_comments: bool = False
+    auto_excerpt_length: int = 200
+    default_author: str = "Admin"
 
 class ContactMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
