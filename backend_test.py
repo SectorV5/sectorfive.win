@@ -1327,6 +1327,495 @@ This automated testing approach helps catch issues early and ensures a robust ba
         except Exception as e:
             self.log_result("Settings Management - Verify Public Settings Update", False, "Public settings verification failed", str(e))
     
+    def test_enhanced_user_management(self):
+        """Test enhanced user management system with permissions"""
+        print("\n=== Testing Enhanced User Management System ===")
+        
+        if not self.token:
+            self.log_result("Enhanced User Management", False, "No authentication token available")
+            return
+        
+        created_user_id = None
+        
+        # Test 1: Verify admin user has full permissions and is_owner=True
+        try:
+            response = requests.get(f"{self.base_url}/me", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                required_fields = ["id", "username", "email", "permissions", "is_owner"]
+                
+                if all(field in user_data for field in required_fields):
+                    is_owner = user_data.get("is_owner", False)
+                    permissions = user_data.get("permissions", {})
+                    
+                    # Check if admin has owner status and full permissions
+                    if is_owner and permissions.get("users_view", False) and permissions.get("blog_write_new", False):
+                        self.log_result("Enhanced User - Admin Full Permissions", True, 
+                                      f"Admin user has is_owner={is_owner} with full permissions")
+                    else:
+                        self.log_result("Enhanced User - Admin Full Permissions", False, 
+                                      f"Admin missing owner status or permissions: is_owner={is_owner}", str(permissions))
+                else:
+                    missing_fields = [field for field in required_fields if field not in user_data]
+                    self.log_result("Enhanced User - Admin Full Permissions", False, 
+                                  f"Admin user data missing fields: {missing_fields}", str(user_data))
+            else:
+                self.log_result("Enhanced User - Admin Full Permissions", False, 
+                              f"Failed to get admin user data: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced User - Admin Full Permissions", False, "Admin user data test failed", str(e))
+        
+        # Test 2: List all users (requires users_view permission)
+        try:
+            response = requests.get(f"{self.base_url}/users", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "users" in data and isinstance(data["users"], list):
+                    users = data["users"]
+                    self.log_result("Enhanced User - List Users", True, 
+                                  f"Successfully retrieved {len(users)} users with permission check")
+                else:
+                    self.log_result("Enhanced User - List Users", False, 
+                                  "Users list response missing or invalid", str(data))
+            else:
+                self.log_result("Enhanced User - List Users", False, 
+                              f"Failed to list users: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced User - List Users", False, "List users test failed", str(e))
+        
+        # Test 3: Create new user with limited permissions
+        try:
+            user_data = {
+                "username": "testuser",
+                "email": "testuser@example.com",
+                "password": "testpass123",
+                "display_name": "Test User",
+                "permissions": {
+                    "blog_read_all": True,
+                    "blog_write_new": False,
+                    "blog_edit_own": True,
+                    "blog_edit_all": False,
+                    "blog_delete_posts": False,
+                    "users_view": False,
+                    "users_create": False,
+                    "users_edit": False,
+                    "users_delete": False,
+                    "settings_view_only": True,
+                    "settings_full_admin": False
+                }
+            }
+            response = requests.post(f"{self.base_url}/users", json=user_data, headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "id" in result and "message" in result:
+                    created_user_id = result["id"]
+                    self.log_result("Enhanced User - Create User", True, 
+                                  f"Successfully created user with limited permissions: {result['message']}")
+                else:
+                    self.log_result("Enhanced User - Create User", False, 
+                                  "Create user response missing required fields", str(result))
+            else:
+                self.log_result("Enhanced User - Create User", False, 
+                              f"Failed to create user: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced User - Create User", False, "Create user test failed", str(e))
+        
+        # Test 4: Get specific user details
+        if created_user_id:
+            try:
+                response = requests.get(f"{self.base_url}/users/{created_user_id}", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    user_details = response.json()
+                    if "permissions" in user_details and "password_hash" not in user_details:
+                        permissions = user_details["permissions"]
+                        if permissions.get("blog_write_new") == False and permissions.get("blog_edit_own") == True:
+                            self.log_result("Enhanced User - Get User Details", True, 
+                                          "Successfully retrieved user with correct permissions (no password hash)")
+                        else:
+                            self.log_result("Enhanced User - Get User Details", False, 
+                                          "User permissions not as expected", str(permissions))
+                    else:
+                        self.log_result("Enhanced User - Get User Details", False, 
+                                      "User details missing permissions or contains password hash", str(user_details))
+                else:
+                    self.log_result("Enhanced User - Get User Details", False, 
+                                  f"Failed to get user details: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Enhanced User - Get User Details", False, "Get user details test failed", str(e))
+        
+        # Test 5: Update user permissions
+        if created_user_id:
+            try:
+                update_data = {
+                    "display_name": "Updated Test User",
+                    "permissions": {
+                        "blog_read_all": True,
+                        "blog_write_new": True,  # Grant blog writing permission
+                        "blog_edit_own": True,
+                        "blog_edit_all": False,
+                        "blog_delete_posts": False,
+                        "users_view": True,  # Grant user viewing permission
+                        "settings_view_only": True
+                    }
+                }
+                response = requests.put(f"{self.base_url}/users/{created_user_id}", json=update_data, headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Enhanced User - Update User", True, 
+                                      f"Successfully updated user permissions: {result['message']}")
+                    else:
+                        self.log_result("Enhanced User - Update User", False, 
+                                      "Update user response missing message", str(result))
+                else:
+                    self.log_result("Enhanced User - Update User", False, 
+                                  f"Failed to update user: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Enhanced User - Update User", False, "Update user test failed", str(e))
+        
+        # Test 6: Delete created user
+        if created_user_id:
+            try:
+                response = requests.delete(f"{self.base_url}/users/{created_user_id}", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Enhanced User - Delete User", True, 
+                                      f"Successfully deleted user: {result['message']}")
+                    else:
+                        self.log_result("Enhanced User - Delete User", False, 
+                                      "Delete user response missing message", str(result))
+                else:
+                    self.log_result("Enhanced User - Delete User", False, 
+                                  f"Failed to delete user: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Enhanced User - Delete User", False, "Delete user test failed", str(e))
+        
+        # Test 7: Try to create user with duplicate username
+        try:
+            duplicate_user_data = {
+                "username": "admin",  # This should already exist
+                "email": "duplicate@example.com",
+                "password": "testpass123",
+                "display_name": "Duplicate User"
+            }
+            response = requests.post(f"{self.base_url}/users", json=duplicate_user_data, headers=self.auth_headers)
+            
+            if response.status_code == 400:
+                self.log_result("Enhanced User - Duplicate Username Check", True, 
+                              "Correctly rejected duplicate username")
+            else:
+                self.log_result("Enhanced User - Duplicate Username Check", False, 
+                              f"Expected 400 for duplicate username, got {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced User - Duplicate Username Check", False, "Duplicate username test failed", str(e))
+
+    def test_permission_system(self):
+        """Test permission system for blog operations"""
+        print("\n=== Testing Permission System ===")
+        
+        if not self.token:
+            self.log_result("Permission System", False, "No authentication token available")
+            return
+        
+        created_post_id = None
+        
+        # Test 1: Blog post creation requires "blog_write_new" permission
+        try:
+            post_data = {
+                "title": "Permission Test Blog Post",
+                "slug": "permission-test-post",
+                "content": "This post is created to test the permission system for blog operations.",
+                "tags": ["testing", "permissions"],
+                "author": "Admin",
+                "published": True
+            }
+            response = requests.post(f"{self.base_url}/blog", json=post_data, headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                created_post = response.json()
+                if "id" in created_post:
+                    created_post_id = created_post["id"]
+                    self.log_result("Permission System - Blog Write Permission", True, 
+                                  "Admin successfully created blog post with blog_write_new permission")
+                else:
+                    self.log_result("Permission System - Blog Write Permission", False, 
+                                  "Blog post creation response missing ID", str(created_post))
+            else:
+                self.log_result("Permission System - Blog Write Permission", False, 
+                              f"Blog post creation failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Permission System - Blog Write Permission", False, "Blog write permission test failed", str(e))
+        
+        # Test 2: Blog post editing with "blog_edit_all" permission (admin should have this)
+        if created_post_id:
+            try:
+                update_data = {
+                    "title": "Updated Permission Test Blog Post",
+                    "content": "This post has been updated to test the blog_edit_all permission.",
+                    "tags": ["testing", "permissions", "updated"],
+                    "author": "Admin",
+                    "published": True
+                }
+                response = requests.put(f"{self.base_url}/blog/{created_post_id}", json=update_data, headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Permission System - Blog Edit All Permission", True, 
+                                      "Admin successfully edited blog post with blog_edit_all permission")
+                    else:
+                        self.log_result("Permission System - Blog Edit All Permission", False, 
+                                      "Blog edit response missing message", str(result))
+                else:
+                    self.log_result("Permission System - Blog Edit All Permission", False, 
+                                  f"Blog post edit failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Permission System - Blog Edit All Permission", False, "Blog edit permission test failed", str(e))
+        
+        # Test 3: Blog post deletion requires "blog_delete_posts" permission
+        if created_post_id:
+            try:
+                response = requests.delete(f"{self.base_url}/blog/{created_post_id}", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Permission System - Blog Delete Permission", True, 
+                                      "Admin successfully deleted blog post with blog_delete_posts permission")
+                    else:
+                        self.log_result("Permission System - Blog Delete Permission", False, 
+                                      "Blog delete response missing message", str(result))
+                else:
+                    self.log_result("Permission System - Blog Delete Permission", False, 
+                                  f"Blog post deletion failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Permission System - Blog Delete Permission", False, "Blog delete permission test failed", str(e))
+        
+        # Test 4: Test permission checking for user management operations
+        try:
+            # This should work since admin has users_view permission
+            response = requests.get(f"{self.base_url}/users", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                self.log_result("Permission System - User Management Permission", True, 
+                              "Admin successfully accessed user management with users_view permission")
+            else:
+                self.log_result("Permission System - User Management Permission", False, 
+                              f"User management access failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Permission System - User Management Permission", False, "User management permission test failed", str(e))
+        
+        # Test 5: Test owner-only operations (backup system)
+        try:
+            response = requests.get(f"{self.base_url}/backups", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "backups" in data:
+                    self.log_result("Permission System - Owner Only Operations", True, 
+                                  "Admin successfully accessed owner-only backup operations")
+                else:
+                    self.log_result("Permission System - Owner Only Operations", False, 
+                                  "Backup response missing backups field", str(data))
+            else:
+                self.log_result("Permission System - Owner Only Operations", False, 
+                              f"Owner-only operation failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Permission System - Owner Only Operations", False, "Owner-only operations test failed", str(e))
+
+    def test_backup_system(self):
+        """Test backup creation, listing, and restore functionality"""
+        print("\n=== Testing Backup System ===")
+        
+        if not self.token:
+            self.log_result("Backup System", False, "No authentication token available")
+            return
+        
+        created_backup_name = None
+        
+        # Test 1: Create backup (owner-only operation)
+        try:
+            response = requests.post(f"{self.base_url}/backup", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["message", "backup_name", "backup_id", "items_backed_up"]
+                
+                if all(field in result for field in required_fields):
+                    created_backup_name = result["backup_name"]
+                    self.log_result("Backup System - Create Backup", True, 
+                                  f"Successfully created backup: {result['backup_name']} with {result['items_backed_up']} items")
+                else:
+                    missing_fields = [field for field in required_fields if field not in result]
+                    self.log_result("Backup System - Create Backup", False, 
+                                  f"Backup creation response missing fields: {missing_fields}", str(result))
+            else:
+                self.log_result("Backup System - Create Backup", False, 
+                              f"Backup creation failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Backup System - Create Backup", False, "Backup creation test failed", str(e))
+        
+        # Test 2: List backups
+        try:
+            response = requests.get(f"{self.base_url}/backups", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "backups" in data and isinstance(data["backups"], list):
+                    backups = data["backups"]
+                    if len(backups) > 0:
+                        # Check backup structure
+                        first_backup = backups[0]
+                        expected_fields = ["name", "created_at", "created_by", "collections", "total_items", "size_bytes", "size_mb"]
+                        
+                        if all(field in first_backup for field in expected_fields):
+                            self.log_result("Backup System - List Backups", True, 
+                                          f"Successfully listed {len(backups)} backups with complete metadata")
+                        else:
+                            missing_fields = [field for field in expected_fields if field not in first_backup]
+                            self.log_result("Backup System - List Backups", False, 
+                                          f"Backup metadata missing fields: {missing_fields}", str(first_backup))
+                    else:
+                        self.log_result("Backup System - List Backups", True, 
+                                      "Successfully listed backups (empty list)")
+                else:
+                    self.log_result("Backup System - List Backups", False, 
+                                  "Backups list response missing or invalid", str(data))
+            else:
+                self.log_result("Backup System - List Backups", False, 
+                              f"Failed to list backups: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Backup System - List Backups", False, "List backups test failed", str(e))
+        
+        # Test 3: Test backup restore functionality (without actually restoring)
+        if created_backup_name:
+            try:
+                # We'll test the endpoint but not actually restore to avoid disrupting the system
+                # Instead, we'll test with a non-existent backup to verify error handling
+                fake_backup_name = "non-existent-backup"
+                response = requests.post(f"{self.base_url}/restore/{fake_backup_name}", headers=self.auth_headers)
+                
+                if response.status_code == 404:
+                    self.log_result("Backup System - Restore Error Handling", True, 
+                                  "Correctly returned 404 for non-existent backup")
+                else:
+                    self.log_result("Backup System - Restore Error Handling", False, 
+                                  f"Expected 404 for non-existent backup, got {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Backup System - Restore Error Handling", False, "Backup restore error handling test failed", str(e))
+        
+        # Test 4: Delete backup (cleanup)
+        if created_backup_name:
+            try:
+                response = requests.delete(f"{self.base_url}/backups/{created_backup_name}", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Backup System - Delete Backup", True, 
+                                      f"Successfully deleted backup: {result['message']}")
+                    else:
+                        self.log_result("Backup System - Delete Backup", False, 
+                                      "Delete backup response missing message", str(result))
+                else:
+                    self.log_result("Backup System - Delete Backup", False, 
+                                  f"Failed to delete backup: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Backup System - Delete Backup", False, "Delete backup test failed", str(e))
+        
+        # Test 5: Test non-owner access to backup operations
+        # Note: This would require creating a non-owner user and testing with their credentials
+        # For now, we'll just verify that the current admin user (who is owner) can access these endpoints
+        try:
+            response = requests.get(f"{self.base_url}/backups", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                self.log_result("Backup System - Owner Access Verification", True, 
+                              "Owner successfully accessed backup operations")
+            elif response.status_code == 403:
+                self.log_result("Backup System - Owner Access Verification", False, 
+                              "Owner was denied access to backup operations")
+            else:
+                self.log_result("Backup System - Owner Access Verification", False, 
+                              f"Unexpected response for owner backup access: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Backup System - Owner Access Verification", False, "Owner access verification test failed", str(e))
+
+    def test_enhanced_authentication_flow(self):
+        """Test enhanced authentication with new /api/change-credentials endpoint"""
+        print("\n=== Testing Enhanced Authentication Flow ===")
+        
+        # Test 1: Verify admin login returns enhanced user data
+        try:
+            login_data = {
+                "username": "admin",
+                "password": "admin"
+            }
+            response = requests.post(f"{self.base_url}/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["access_token", "token_type", "must_change_password"]
+                
+                if all(field in data for field in required_fields):
+                    token = data["access_token"]
+                    must_change = data.get("must_change_password", False)
+                    
+                    # Test /api/me with the token
+                    auth_headers = {"Authorization": f"Bearer {token}"}
+                    me_response = requests.get(f"{self.base_url}/me", headers=auth_headers)
+                    
+                    if me_response.status_code == 200:
+                        user_data = me_response.json()
+                        enhanced_fields = ["permissions", "is_owner", "display_name", "created_at", "last_login"]
+                        
+                        if all(field in user_data for field in enhanced_fields):
+                            self.log_result("Enhanced Auth - Login with Enhanced Data", True, 
+                                          f"Login and /me return enhanced user data with permissions and owner status")
+                        else:
+                            missing_fields = [field for field in enhanced_fields if field not in user_data]
+                            self.log_result("Enhanced Auth - Login with Enhanced Data", False, 
+                                          f"Enhanced user data missing fields: {missing_fields}", str(user_data))
+                    else:
+                        self.log_result("Enhanced Auth - Login with Enhanced Data", False, 
+                                      f"/me endpoint failed: {me_response.status_code}", me_response.text)
+                else:
+                    missing_fields = [field for field in required_fields if field not in data]
+                    self.log_result("Enhanced Auth - Login with Enhanced Data", False, 
+                                  f"Login response missing fields: {missing_fields}", str(data))
+            else:
+                self.log_result("Enhanced Auth - Login with Enhanced Data", False, 
+                              f"Login failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced Auth - Login with Enhanced Data", False, "Enhanced login test failed", str(e))
+        
+        # Test 2: Test new /api/change-credentials endpoint
+        if self.token:
+            try:
+                # Test with invalid old password
+                change_data = {
+                    "old_password": "wrongpassword",
+                    "new_username": "testadmin",
+                    "new_password": "newpassword123"
+                }
+                response = requests.post(f"{self.base_url}/change-credentials", data=change_data, headers=self.auth_headers)
+                
+                if response.status_code == 400:
+                    self.log_result("Enhanced Auth - Change Credentials Validation", True, 
+                                  "Correctly rejected invalid old password")
+                else:
+                    self.log_result("Enhanced Auth - Change Credentials Validation", False, 
+                                  f"Expected 400 for invalid old password, got {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Enhanced Auth - Change Credentials Validation", False, "Change credentials validation test failed", str(e))
+
     def run_all_tests(self):
         """Run all backend tests"""
         print(f"🚀 Starting Comprehensive Backend Testing for Sectorfive Website")
