@@ -691,27 +691,131 @@ async def get_settings(current_user: str = Depends(get_current_user)):
 
 @api_router.put("/settings")
 async def update_settings(
-    max_file_size: int = Form(...),
-    site_title: str = Form(...),
-    site_email: str = Form(...),
-    contact_cooldown: int = Form(...),
+    # Basic Settings
+    max_file_size: Optional[int] = Form(None),
+    site_title: Optional[str] = Form(None),
+    site_email: Optional[str] = Form(None),
+    contact_cooldown: Optional[int] = Form(None),
+    
+    # Appearance
     background_type: Optional[str] = Form(None),
     background_value: Optional[str] = Form(None),
     background_image_url: Optional[str] = Form(None),
+    
+    # Theme Customization
+    primary_color: Optional[str] = Form(None),
+    secondary_color: Optional[str] = Form(None),
+    accent_color: Optional[str] = Form(None),
+    font_family: Optional[str] = Form(None),
+    custom_css: Optional[str] = Form(None),
+    
+    # SEO Settings
+    meta_description: Optional[str] = Form(None),
+    meta_keywords: Optional[str] = Form(None),
+    google_analytics_id: Optional[str] = Form(None),
+    google_search_console: Optional[str] = Form(None),
+    robots_txt: Optional[str] = Form(None),
+    
+    # Social Media Links
+    facebook_url: Optional[str] = Form(None),
+    twitter_url: Optional[str] = Form(None),
+    instagram_url: Optional[str] = Form(None),
+    linkedin_url: Optional[str] = Form(None),
+    github_url: Optional[str] = Form(None),
+    youtube_url: Optional[str] = Form(None),
+    
+    # Email Notification Settings
+    smtp_server: Optional[str] = Form(None),
+    smtp_port: Optional[int] = Form(None),
+    smtp_username: Optional[str] = Form(None),
+    smtp_password: Optional[str] = Form(None),
+    smtp_use_tls: Optional[bool] = Form(None),
+    notification_email: Optional[str] = Form(None),
+    notify_on_contact: Optional[bool] = Form(None),
+    notify_on_new_blog: Optional[bool] = Form(None),
+    
+    # Blog Settings
+    posts_per_page: Optional[int] = Form(None),
+    enable_comments: Optional[bool] = Form(None),
+    auto_excerpt_length: Optional[int] = Form(None),
+    default_author: Optional[str] = Form(None),
+    
     current_user: str = Depends(get_current_user)
 ):
-    update_data = {
-        "max_file_size": max_file_size,
-        "site_title": site_title,
-        "site_email": site_email,
-        "contact_cooldown": contact_cooldown
-    }
+    update_data = {}
+    
+    # Only update fields that are provided
+    if max_file_size is not None:
+        update_data["max_file_size"] = max_file_size
+    if site_title is not None:
+        update_data["site_title"] = site_title
+    if site_email is not None:
+        update_data["site_email"] = site_email
+    if contact_cooldown is not None:
+        update_data["contact_cooldown"] = contact_cooldown
     if background_type is not None:
         update_data["background_type"] = background_type
     if background_value is not None:
         update_data["background_value"] = background_value
     if background_image_url is not None:
         update_data["background_image_url"] = background_image_url
+    if primary_color is not None:
+        update_data["primary_color"] = primary_color
+    if secondary_color is not None:
+        update_data["secondary_color"] = secondary_color
+    if accent_color is not None:
+        update_data["accent_color"] = accent_color
+    if font_family is not None:
+        update_data["font_family"] = font_family
+    if custom_css is not None:
+        update_data["custom_css"] = custom_css
+    if meta_description is not None:
+        update_data["meta_description"] = meta_description
+    if meta_keywords is not None:
+        update_data["meta_keywords"] = meta_keywords
+    if google_analytics_id is not None:
+        update_data["google_analytics_id"] = google_analytics_id
+    if google_search_console is not None:
+        update_data["google_search_console"] = google_search_console
+    if robots_txt is not None:
+        update_data["robots_txt"] = robots_txt
+    if facebook_url is not None:
+        update_data["facebook_url"] = facebook_url
+    if twitter_url is not None:
+        update_data["twitter_url"] = twitter_url
+    if instagram_url is not None:
+        update_data["instagram_url"] = instagram_url
+    if linkedin_url is not None:
+        update_data["linkedin_url"] = linkedin_url
+    if github_url is not None:
+        update_data["github_url"] = github_url
+    if youtube_url is not None:
+        update_data["youtube_url"] = youtube_url
+    if smtp_server is not None:
+        update_data["smtp_server"] = smtp_server
+    if smtp_port is not None:
+        update_data["smtp_port"] = smtp_port
+    if smtp_username is not None:
+        update_data["smtp_username"] = smtp_username
+    if smtp_password is not None:
+        update_data["smtp_password"] = smtp_password
+    if smtp_use_tls is not None:
+        update_data["smtp_use_tls"] = smtp_use_tls
+    if notification_email is not None:
+        update_data["notification_email"] = notification_email
+    if notify_on_contact is not None:
+        update_data["notify_on_contact"] = notify_on_contact
+    if notify_on_new_blog is not None:
+        update_data["notify_on_new_blog"] = notify_on_new_blog
+    if posts_per_page is not None:
+        update_data["posts_per_page"] = posts_per_page
+    if enable_comments is not None:
+        update_data["enable_comments"] = enable_comments
+    if auto_excerpt_length is not None:
+        update_data["auto_excerpt_length"] = auto_excerpt_length
+    if default_author is not None:
+        update_data["default_author"] = default_author
+    
     await db.settings.update_one({}, {"$set": update_data}, upsert=True)
     return {"message": "Settings updated successfully"}
 
@@ -720,10 +824,75 @@ async def public_settings():
     s = await db.settings.find_one() or {}
     return {
         "site_title": s.get("site_title", Settings().site_title),
+        "meta_description": s.get("meta_description", Settings().meta_description),
+        "meta_keywords": s.get("meta_keywords", Settings().meta_keywords),
         "background_type": s.get("background_type", "default"),
         "background_value": s.get("background_value"),
         "background_image_url": s.get("background_image_url"),
+        "primary_color": s.get("primary_color", Settings().primary_color),
+        "secondary_color": s.get("secondary_color", Settings().secondary_color),
+        "accent_color": s.get("accent_color", Settings().accent_color),
+        "font_family": s.get("font_family", Settings().font_family),
+        "custom_css": s.get("custom_css"),
+        "google_analytics_id": s.get("google_analytics_id"),
+        "facebook_url": s.get("facebook_url"),
+        "twitter_url": s.get("twitter_url"),
+        "instagram_url": s.get("instagram_url"),
+        "linkedin_url": s.get("linkedin_url"),
+        "github_url": s.get("github_url"),
+        "youtube_url": s.get("youtube_url"),
+        "posts_per_page": s.get("posts_per_page", Settings().posts_per_page),
+        "enable_comments": s.get("enable_comments", Settings().enable_comments)
     }
+
+@api_router.get("/robots.txt")
+async def get_robots_txt():
+    """Serve robots.txt dynamically from settings"""
+    s = await db.settings.find_one() or {}
+    robots_content = s.get("robots_txt", Settings().robots_txt)
+    return {"content": robots_content}
+
+@api_router.get("/sitemap.xml")
+async def get_sitemap():
+    """Generate dynamic sitemap"""
+    base_url = "https://sectorfive.win"  # Should be configurable
+    
+    # Get all published blog posts
+    posts = await db.blog_posts.find({"published": True}).sort("updated_at", -1).to_list(length=None)
+    
+    # Get all pages
+    pages = await db.pages.find().to_list(length=None)
+    
+    urls = []
+    
+    # Add homepage
+    urls.append({
+        "loc": base_url,
+        "lastmod": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "changefreq": "weekly",
+        "priority": "1.0"
+    })
+    
+    # Add blog posts
+    for post in posts:
+        urls.append({
+            "loc": f"{base_url}/blog/{post['slug']}",
+            "lastmod": post.get("updated_at", post.get("created_at")).strftime("%Y-%m-%d"),
+            "changefreq": "monthly",
+            "priority": "0.8"
+        })
+    
+    # Add pages
+    for page in pages:
+        if not page.get("is_homepage"):
+            urls.append({
+                "loc": f"{base_url}/{page['slug']}",
+                "lastmod": page.get("updated_at", page.get("created_at")).strftime("%Y-%m-%d"),
+                "changefreq": "monthly",
+                "priority": "0.6"
+            })
+    
+    return {"urls": urls}
 
 @app.on_event("startup")
 async def startup_event():
