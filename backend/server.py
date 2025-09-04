@@ -461,11 +461,23 @@ async def me(current_user: str = Depends(get_current_user)):
     user = await db.users.find_one({"username": current_user})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update last login
+    await db.users.update_one(
+        {"username": current_user},
+        {"$set": {"last_login": datetime.now(timezone.utc)}}
+    )
+    
     return {
+        "id": user["id"],
         "username": user["username"],
         "email": user.get("email"),
+        "display_name": user.get("display_name", ""),
         "must_change_password": user.get("must_change_password", False),
-        "created_at": user.get("created_at")
+        "is_owner": user.get("is_owner", False),
+        "permissions": user.get("permissions", {}),
+        "created_at": user.get("created_at"),
+        "last_login": user.get("last_login")
     }
 
 @api_router.post("/change-credentials")
