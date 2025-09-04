@@ -107,6 +107,10 @@ class Settings(BaseModel):
     site_title: str = "Sectorfive Personal Website"
     site_email: str = "admin@sectorfive.win"
     contact_cooldown: int = 300  # 5 minutes in seconds
+    # New appearance settings
+    background_type: str = "default"  # default | color | gradient | image
+    background_value: Optional[str] = None  # hex/color or gradient css
+    background_image_url: Optional[str] = None  # full URL to image
 
 class ContactMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -494,7 +498,10 @@ async def get_analytics(
 async def submit_contact(contact_data: ContactForm, request: Request):
     # Rate limiting
     client_ip = request.client.host
-    await check_rate_limit(client_ip, "contact", 300)  # 5 minutes
+    # Pull dynamic cooldown from settings, fallback to 300
+    settings = await db.settings.find_one() or {}
+    cooldown = settings.get("contact_cooldown", 300)
+    await check_rate_limit(client_ip, "contact", cooldown)
     
     contact = ContactMessage(
         name=contact_data.name,
@@ -553,6 +560,9 @@ async def update_settings(
     site_title: str = Form(...),
     site_email: str = Form(...),
     contact_cooldown: int = Form(...),
+    background_type: Optional[str] = Form(None),
+    background_value: Optional[str] = Form(None),
+    background_image_url: Optional[str] = Form(None),
     current_user: str = Depends(get_current_user)
 ):
     update_data = {
@@ -561,9 +571,27 @@ async def update_settings(
         "site_email": site_email,
         "contact_cooldown": contact_cooldown
     }
+    if background_type is not None:
+        update_data["background_type"] = background_type
+    if background_value is not None:
+        update_data["background_value"] = background_value
+    if background_image_url is not None:
+        update_data["background_image_url"] = background_image_url
     
     await db.settings.update_one({}, {"$set": update_data}, upsert=True)
     return {"message": "Settings updated successfully"}
+
+# Public settings (no auth) for frontend theming
+@api_router.get("/public-settings")
+async def public_settings():
+    s = await db.settings.find_one() or {}
+    safe = {
+        "site_title": s.get("site_title", Settings().site_title),
+        "background_type": s.get("background_type", "default"),
+        "background_value": s.get("background_value"),
+        "background_image_url": s.get("background_image_url"),
+    }
+    return safe
 
 # Initialize data on startup
 @app.on_event("startup")

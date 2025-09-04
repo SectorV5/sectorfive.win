@@ -2,7 +2,8 @@ import React, { useState, useEffect, createContext, useContext } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link, Navigate, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Editor } from '@tinymce/tinymce-react';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -40,15 +41,6 @@ const AuthProvider = ({ children }) => {
 };
 
 const useAuth = () => useContext(AuthContext);
-
-// Helper function for emoji fallbacks
-const EmojiText = ({ children, fallback }) => {
-  return (
-    <span className="emoji-fallback" data-fallback={fallback}>
-      {children}
-    </span>
-  );
-};
 
 // API helper with auth
 const apiCall = async (url, options = {}) => {
@@ -98,7 +90,7 @@ const Navigation = ({ pages }) => {
     <nav className="retro-nav">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <EmojiText fallback="[HOME]">🏠</EmojiText> Sectorfive.win
+          🏠 Sectorfive.win
         </Link>
         <div className="nav-links">
           <Link to="/">Home</Link>
@@ -128,7 +120,7 @@ const Home = () => {
         setContent(response.data.content);
       } catch (error) {
         console.error('Error fetching homepage:', error);
-        setContent('Welcome to Sectorfive.win! <EmojiText fallback="[ROCKET]">🚀</EmojiText>');
+        setContent('Welcome to Sectorfive.win!');
       } finally {
         setLoading(false);
       }
@@ -189,7 +181,7 @@ const Blog = () => {
                   <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                 </h3>
                 <div className="post-meta">
-                  <EmojiText fallback="[DATE]">📅</EmojiText> {new Date(post.created_at).toLocaleDateString()}
+                  📅 {new Date(post.created_at).toLocaleDateString()}
                 </div>
                 <div className="post-content" dangerouslySetInnerHTML={{ 
                   __html: post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content 
@@ -198,7 +190,7 @@ const Blog = () => {
             ))}
           </div>
         ) : (
-          <p>No blog posts yet. Check back soon! <EmojiText fallback="[NEWS]">📰</EmojiText></p>
+          <p>No blog posts yet. Check back soon!</p>
         )}
       </RetroWindow>
     </div>
@@ -226,13 +218,13 @@ const BlogPost = () => {
   }, [slug]);
 
   if (loading) return <div className="loading">Loading post...</div>;
-  if (!post) return <div className="error">Post not found <EmojiText fallback=":(">😕</EmojiText></div>;
+  if (!post) return <div className="error">Post not found 😕</div>;
 
   return (
     <div className="page-container">
       <RetroWindow title={post.title} className="main-content">
         <div className="post-meta">
-          <EmojiText fallback="[DATE]">📅</EmojiText> {new Date(post.created_at).toLocaleDateString()}
+          📅 {new Date(post.created_at).toLocaleDateString()}
         </div>
         <div className="content" dangerouslySetInnerHTML={{ __html: post.content }} />
       </RetroWindow>
@@ -244,7 +236,7 @@ const Gallery = () => {
   return (
     <div className="page-container">
       <RetroWindow title="🖼️ Image Gallery" className="main-content">
-        <p>Image gallery coming soon! This will showcase photos and media. <EmojiText fallback="[CAMERA]">📸</EmojiText></p>
+        <p>Image gallery coming soon! This will showcase photos and media.</p>
       </RetroWindow>
     </div>
   );
@@ -286,7 +278,7 @@ const Contact = () => {
       <RetroWindow title="📬 Contact Me" className="main-content">
         {sent ? (
           <div className="success-message">
-            <EmojiText fallback="[CHECK]">✅</EmojiText> Message sent successfully! I'll get back to you soon.
+            ✅ Message sent successfully! I'll get back to you soon.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="contact-form">
@@ -326,13 +318,9 @@ const Contact = () => {
             </div>
             <RetroButton type="submit" disabled={sending}>
               {sending ? (
-                <>
-                  <EmojiText fallback="[SENDING]">📤</EmojiText> Sending...
-                </>
+                <>🔄 Sending...</>
               ) : (
-                <>
-                  <EmojiText fallback="[SEND]">📨</EmojiText> Send Message
-                </>
+                <>📨 Send Message</>
               )}
             </RetroButton>
           </form>
@@ -398,13 +386,9 @@ const Login = () => {
           </div>
           <RetroButton type="submit" disabled={loading}>
             {loading ? (
-              <>
-                <EmojiText fallback="[LOADING]">🔄</EmojiText> Logging in...
-              </>
+              <>🔄 Logging in...</>
             ) : (
-              <>
-                <EmojiText fallback="[LOGIN]">🚀</EmojiText> Login
-              </>
+              <>🚀 Login</>
             )}
           </RetroButton>
         </form>
@@ -429,37 +413,37 @@ const Admin = () => {
             className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
           >
-            <EmojiText fallback="[DASH]">📊</EmojiText> Dashboard
+            📊 Dashboard
           </button>
           <button 
             className={`tab-button ${activeTab === 'pages' ? 'active' : ''}`}
             onClick={() => setActiveTab('pages')}
           >
-            <EmojiText fallback="[PAGES]">📄</EmojiText> Pages
+            📄 Pages
           </button>
           <button 
             className={`tab-button ${activeTab === 'blog' ? 'active' : ''}`}
             onClick={() => setActiveTab('blog')}
           >
-            <EmojiText fallback="[BLOG]">📝</EmojiText> Blog
+            📝 Blog
           </button>
           <button 
             className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            <EmojiText fallback="[STATS]">📈</EmojiText> Analytics
+            📈 Analytics
           </button>
           <button 
             className={`tab-button ${activeTab === 'contacts' ? 'active' : ''}`}
             onClick={() => setActiveTab('contacts')}
           >
-            <EmojiText fallback="[MAIL]">📧</EmojiText> Contacts
+            📧 Contacts
           </button>
           <button 
             className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
-            <EmojiText fallback="[SETTINGS]">⚙️</EmojiText> Settings
+            ⚙️ Settings
           </button>
         </div>
 
@@ -482,14 +466,18 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [analytics, contacts] = await Promise.all([
+        const [analytics, contacts, pages, posts] = await Promise.all([
           apiCall('/analytics'),
-          apiCall('/contact-messages')
+          apiCall('/contact-messages'),
+          apiCall('/pages'),
+          axios.get(`${API}/blog`)
         ]);
         setStats({
           totalVisits: analytics.data.total_visits,
           uniqueVisitors: analytics.data.unique_visitors,
-          totalContacts: contacts.data.pagination.total_results
+          totalContacts: contacts.data.pagination.total_results,
+          totalPages: pages.data.length,
+          totalPosts: posts.data.length
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -501,19 +489,19 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      <h3><EmojiText fallback="[TARGET]">🎯</EmojiText> Quick Stats</h3>
+      <h3>🎯 Quick Stats</h3>
       <p>Welcome to your admin dashboard! Use the tabs above to manage your website.</p>
       <div className="dashboard-stats">
         <div className="stat-card">
-          <h4><EmojiText fallback="[PAGES]">📄</EmojiText> Pages</h4>
-          <p>Manage your website pages</p>
+          <h4>📄 Pages</h4>
+          {stats ? <p>Total: {stats.totalPages}</p> : <p>Loading...</p>}
         </div>
         <div className="stat-card">
-          <h4><EmojiText fallback="[BLOG]">📝</EmojiText> Blog</h4>
-          <p>Create and manage blog posts</p>
+          <h4>📝 Blog</h4>
+          {stats ? <p>Total Posts: {stats.totalPosts}</p> : <p>Loading...</p>}
         </div>
         <div className="stat-card">
-          <h4><EmojiText fallback="[STATS]">📈</EmojiText> Analytics</h4>
+          <h4>📈 Analytics</h4>
           {stats ? (
             <div>
               <p>Total Visits: {stats.totalVisits}</p>
@@ -524,7 +512,7 @@ const AdminDashboard = () => {
           )}
         </div>
         <div className="stat-card">
-          <h4><EmojiText fallback="[MAIL]">📧</EmojiText> Contacts</h4>
+          <h4>📧 Contacts</h4>
           {stats ? (
             <p>Messages: {stats.totalContacts}</p>
           ) : (
@@ -535,6 +523,23 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link', 'image'],
+    ['clean']
+  ]
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'image'
+];
 
 const AdminPages = () => {
   const [pages, setPages] = useState([]);
@@ -645,22 +650,7 @@ const AdminPages = () => {
           <div className="form-group">
             <label>Content:</label>
             <div className="editor-container">
-              <Editor
-                value={formData.content}
-                onEditorChange={(content) => setFormData({ ...formData, content })}
-                init={{
-                  height: 400,
-                  menubar: false,
-                  plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount'
-                  ],
-                  toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-                  skin: 'oxide',
-                  content_css: 'default'
-                }}
-              />
+              <ReactQuill theme="snow" value={formData.content} onChange={(content) => setFormData({ ...formData, content })} modules={quillModules} formats={quillFormats} />
             </div>
           </div>
           <div className="admin-controls">
@@ -679,7 +669,7 @@ const AdminPages = () => {
   return (
     <div className="admin-section">
       <div className="admin-controls">
-        <h3><EmojiText fallback="[PAGES]">📄</EmojiText> Page Management</h3>
+        <h3>📄 Page Management</h3>
         <RetroButton onClick={() => setCreating(true)}>
           Create New Page
         </RetroButton>
@@ -819,22 +809,7 @@ const AdminBlog = () => {
           <div className="form-group">
             <label>Content:</label>
             <div className="editor-container">
-              <Editor
-                value={formData.content}
-                onEditorChange={(content) => setFormData({ ...formData, content })}
-                init={{
-                  height: 500,
-                  menubar: false,
-                  plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount'
-                  ],
-                  toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-                  skin: 'oxide',
-                  content_css: 'default'
-                }}
-              />
+              <ReactQuill theme="snow" value={formData.content} onChange={(content) => setFormData({ ...formData, content })} modules={quillModules} formats={quillFormats} />
             </div>
           </div>
           <div className="admin-controls">
@@ -853,7 +828,7 @@ const AdminBlog = () => {
   return (
     <div className="admin-section">
       <div className="admin-controls">
-        <h3><EmojiText fallback="[BLOG]">📝</EmojiText> Blog Management</h3>
+        <h3>📝 Blog Management</h3>
         <RetroButton onClick={() => setCreating(true)}>
           Create New Post
         </RetroButton>
@@ -921,7 +896,7 @@ const AdminAnalytics = () => {
 
   return (
     <div className="admin-section">
-      <h3><EmojiText fallback="[STATS]">📈</EmojiText> Website Analytics</h3>
+      <h3>📈 Website Analytics</h3>
       
       {analytics && (
         <>
@@ -1061,11 +1036,19 @@ const AdminContacts = () => {
     }
   };
 
+  const mailtoHref = (m) => {
+    const subject = `Re: Your message to Sectorfive.win`;
+    const body = `Hi ${m.name || ''},%0D%0A%0D%0A` +
+      `Thanks for reaching out. Below is the message you sent:%0D%0A%0D%0A` +
+      `${encodeURIComponent(m.message)}%0D%0A%0D%0A--%0D%0A`;
+    return `mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+  };
+
   if (loading && !contacts) return <div>Loading contacts...</div>;
 
   return (
     <div className="admin-section">
-      <h3><EmojiText fallback="[MAIL]">📧</EmojiText> Contact Messages</h3>
+      <h3>📧 Contact Messages</h3>
       
       {contacts && (
         <>
@@ -1099,6 +1082,7 @@ const AdminContacts = () => {
                   <td>{message.message.substring(0, 100)}...</td>
                   <td>{message.ip_address}</td>
                   <td>
+                    <a href={mailtoHref(message)} className="nav-button" target="_blank" rel="noopener noreferrer">Reply</a>{' '}
                     <RetroButton onClick={() => handleDelete(message.id)}>
                       Delete
                     </RetroButton>
@@ -1136,6 +1120,7 @@ const AdminSettings = () => {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -1153,13 +1138,41 @@ const AdminSettings = () => {
     }
   };
 
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await apiCall('/upload', { method: 'POST', data: fd, headers: { 'Content-Type': 'multipart/form-data' } });
+      const fileUrl = `${BACKEND_URL}/api/uploads/${res.data.filename}`;
+      setFormData(prev => ({ ...prev, background_image_url: fileUrl, background_type: 'image' }));
+      alert('Image uploaded. Remember to Save Settings.');
+    } catch (err) {
+      console.error(err);
+      alert('Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const formDataObj = new FormData();
-      Object.keys(formData).forEach(key => {
-        formDataObj.append(key, formData[key]);
+      const payload = {
+        max_file_size: formData.max_file_size,
+        site_title: formData.site_title || '',
+        site_email: formData.site_email || '',
+        contact_cooldown: formData.contact_cooldown || 300,
+        background_type: formData.background_type || 'default',
+        background_value: formData.background_value || '',
+        background_image_url: formData.background_image_url || ''
+      };
+      Object.keys(payload).forEach(key => {
+        formDataObj.append(key, payload[key]);
       });
       
       await apiCall('/settings', {
@@ -1179,7 +1192,7 @@ const AdminSettings = () => {
 
   return (
     <div className="admin-section">
-      <h3><EmojiText fallback="[SETTINGS]">⚙️</EmojiText> Website Settings</h3>
+      <h3>⚙️ Website Settings</h3>
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -1223,6 +1236,65 @@ const AdminSettings = () => {
           />
           <small>Current: {Math.round((formData.contact_cooldown || 0) / 60)} minutes</small>
         </div>
+
+        <div className="form-group">
+          <label>Background Type:</label>
+          <select
+            value={formData.background_type || 'default'}
+            onChange={(e) => setFormData({ ...formData, background_type: e.target.value })}
+            className="retro-input"
+          >
+            <option value="default">Default (current CSS)</option>
+            <option value="color">Solid Color</option>
+            <option value="gradient">CSS Gradient</option>
+            <option value="image">Image URL</option>
+          </select>
+        </div>
+
+        {formData.background_type === 'color' && (
+          <div className="form-group">
+            <label>Color (hex or CSS color):</label>
+            <input
+              type="text"
+              value={formData.background_value || ''}
+              onChange={(e) => setFormData({ ...formData, background_value: e.target.value })}
+              className="retro-input"
+              placeholder="#123456 or color name"
+            />
+          </div>
+        )}
+
+        {formData.background_type === 'gradient' && (
+          <div className="form-group">
+            <label>Gradient CSS:</label>
+            <input
+              type="text"
+              value={formData.background_value || ''}
+              onChange={(e) => setFormData({ ...formData, background_value: e.target.value })}
+              className="retro-input"
+              placeholder="e.g., linear-gradient(135deg, #245edc, #1a4298)"
+            />
+          </div>
+        )}
+
+        {formData.background_type === 'image' && (
+          <>
+            <div className="form-group">
+              <label>Image URL:</label>
+              <input
+                type="text"
+                value={formData.background_image_url || ''}
+                onChange={(e) => setFormData({ ...formData, background_image_url: e.target.value })}
+                className="retro-input"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="form-group">
+              <label>Or upload image:</label>
+              <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} />
+            </div>
+          </>
+        )}
         
         <RetroButton type="submit" disabled={saving}>
           {saving ? 'Saving...' : 'Save Settings'}
@@ -1253,7 +1325,7 @@ const PageView = () => {
   }, [slug]);
 
   if (loading) return <div className="loading">Loading page...</div>;
-  if (!page) return <div className="error">Page not found <EmojiText fallback=":(">😕</EmojiText></div>;
+  if (!page) return <div className="error">Page not found 😕</div>;
 
   return (
     <div className="page-container">
@@ -1268,8 +1340,28 @@ function App() {
   const [pages, setPages] = useState([]);
 
   useEffect(() => {
-    // Note: We can't fetch pages for navigation without auth, so we'll skip this for now
-    // In production, you might want a public endpoint for navigation pages only
+    // Apply background from public settings
+    const applyBackground = (s) => {
+      if (!s || !s.background_type || s.background_type === 'default') {
+        document.body.style.background = '';
+        document.body.style.backgroundAttachment = '';
+        return;
+      }
+      if (s.background_type === 'color') {
+        document.body.style.background = s.background_value || '';
+      } else if (s.background_type === 'gradient') {
+        document.body.style.background = s.background_value || '';
+      } else if (s.background_type === 'image') {
+        document.body.style.background = `url("${s.background_image_url}") center / cover no-repeat fixed`;
+      }
+      // Ensure fixed for color/gradient too
+      document.body.style.backgroundAttachment = 'fixed';
+    };
+
+    axios.get(`${API}/public-settings`).then(res => {
+      applyBackground(res.data);
+      document.title = res.data.site_title || 'Sectorfive Personal Website';
+    }).catch(() => {});
   }, []);
 
   return (
