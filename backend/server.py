@@ -468,16 +468,210 @@ async def me(current_user: str = Depends(get_current_user)):
         "created_at": user.get("created_at")
     }
 
-@api_router.post("/change-password")
-async def change_password(old_password: str = Form(...), new_password: str = Form(...), current_user: str = Depends(get_current_user)):
+@api_router.post("/change-credentials")
+async def change_credentials(username: str = Form(...), password: str = Form(...), current_user: str = Depends(get_current_user)):
     user = await db.users.find_one({"username": current_user})
-    if not user or not verify_password(old_password, user["password_hash"]):
-        raise HTTPException(status_code=400, detail="Invalid old password")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if new username already exists (if different from current)
+    if username != current_user:
+        existing_user = await db.users.find_one({"username": username})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Update credentials
     await db.users.update_one(
         {"username": current_user},
-        {"$set": {"password_hash": hash_password(new_password), "must_change_password": False}}
+        {"$set": {
+            "username": username,
+            "password_hash": hash_password(password),
+            "must_change_password": False,
+            "last_login": datetime.now(timezone.utc)
+        }}
     )
-    return {"message": "Password updated successfully"}
+    
+    # Return new token with new username
+    token = create_token(username)
+    return {"access_token": token, "token_type": "bearer", "must_change_password": False}
+
+# Permission checking utilities
+async def check_permission(username: str, permission_path: str) -> bool:
+    """Check if user has specific permission"""
+    user = await db.users.find_one({"username": username})
+    if not user or not user.get("is_active", True):
+        return False
+    
+    # Owner has all permissions
+    if user.get("is_owner", False):
+        return True
+    
+    permissions = user.get("permissions", {})
+    
+    # Navigate nested permission path (e.g., "blog.read_all")
+    parts = permission_path.split(".")
+    current = permissions
+    for part in parts:
+        if isinstance(current, dict):
+            current = current.get(part, False)
+        else:
+            return False
+    
+    return bool(current)
+
+async def require_permission(username: str, permission: str):
+    """Raise HTTP exception if user lacks permission"""
+    if not await check_permission(username, permission):
+        raise HTTPException(status_code=403, detail=f"Permission denied: {permission}")
+
+async def get_user_with_permissions(username: str):
+    """Get user with full permission details"""
+    user = await db.users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# User management endpoints
+@api_router.get("/users")
+async def get_users(current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_view")
+    
+    users = []
+    async for user in db.users.find({}):
+        users.append({
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "display_name": user.get("display_name", ""),
+            "is_owner": user.get("is_owner", False),
+            "is_active": user.get("is_active", True),
+            "created_at": user["created_at"],
+            "last_login": user.get("last_login"),
+            "created_by": user.get("created_by")
+        })
+    
+    return {"users": users}
+
+@api_router.post("/users")
+async def create_user(user_data: UserCreate, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_create")
+    
+    # Check if username already exists
+    existing_user = await db.users.find_one({"username": user_data.username})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Check if email already exists
+    existing_email = await db.users.find_one({"email": user_data.email})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Get creator info
+    creator = await db.users.find_one({"username": current_user})
+    
+    # Create new user
+    new_user = User(
+        username=user_data.username,
+        email=user_data.email,
+        display_name=user_data.display_name,
+        password_hash=hash_password(user_data.password),
+        must_change_password=True,
+        is_owner=False,
+        permissions=user_data.permissions or UserPermissions(),
+        created_by=creator["id"] if creator else None
+    )
+    
+    await db.users.insert_one(new_user.dict())
+    
+    return {"message": "User created successfully", "id": new_user.id}
+
+@api_router.get("/users/{user_id}")
+async def get_user(user_id: str, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_view")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Remove sensitive data
+    user.pop("password_hash", None)
+    
+    return user
+
+@api_router.put("/users/{user_id}")
+async def update_user(user_id: str, user_data: UserUpdate, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_edit")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Don't allow editing owner user unless you are the owner
+    current_user_data = await db.users.find_one({"username": current_user})
+    if user.get("is_owner", False) and not current_user_data.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Cannot edit owner user")
+    
+    # Build update data
+    update_data = {}
+    if user_data.email is not None:
+        # Check if email already exists
+        existing_email = await db.users.find_one({"email": user_data.email, "id": {"$ne": user_id}})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        update_data["email"] = user_data.email
+    
+    if user_data.display_name is not None:
+        update_data["display_name"] = user_data.display_name
+    
+    if user_data.is_active is not None:
+        update_data["is_active"] = user_data.is_active
+    
+    if user_data.permissions is not None:
+        update_data["permissions"] = user_data.permissions.dict()
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    return {"message": "User updated successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_delete")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Don't allow deleting owner user
+    if user.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Cannot delete owner user")
+    
+    # Don't allow deleting yourself
+    current_user_data = await db.users.find_one({"username": current_user})
+    if user["id"] == current_user_data["id"]:
+        raise HTTPException(status_code=403, detail="Cannot delete yourself")
+    
+    await db.users.delete_one({"id": user_id})
+    
+    return {"message": "User deleted successfully"}
+
+@api_router.post("/users/{user_id}/reset-password")
+async def reset_user_password(user_id: str, new_password: str = Form(...), current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "users_edit")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "password_hash": hash_password(new_password),
+            "must_change_password": True
+        }}
+    )
+    
+    return {"message": "Password reset successfully"}
 
 @api_router.post("/change-credentials")
 async def change_credentials(
