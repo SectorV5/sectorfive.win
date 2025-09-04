@@ -1818,12 +1818,18 @@ This automated testing approach helps catch issues early and ensures a robust ba
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print(f"🚀 Starting Comprehensive Backend Testing for Sectorfive Website")
+        print(f"🚀 Starting Enhanced Backend Testing for Sectorfive Website")
         print(f"📡 Testing against: {self.base_url}")
         print(f"⏰ Started at: {datetime.now().isoformat()}")
         print("=" * 80)
         
-        # Run all test suites
+        # Run enhanced test suites focusing on new features
+        self.test_enhanced_authentication_flow()
+        self.test_enhanced_user_management()
+        self.test_permission_system()
+        self.test_backup_system()
+        
+        # Run core regression tests
         self.test_admin_onboarding_flow()
         self.test_authentication_system()
         self.test_content_management()
