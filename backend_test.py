@@ -12,7 +12,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BASE_URL = "https://demobackend.emergentagent.com/api"
+BASE_URL = "http://localhost:8001/api"
 TEST_USERNAME = "admin"
 TEST_PASSWORD = "admin"
 
