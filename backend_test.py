@@ -161,11 +161,11 @@ class BackendTester:
         """Test the complete authentication system"""
         print("\n=== Testing Authentication System ===")
         
-        # Test 1: Valid login
+        # Test 1: Valid login (now using new credentials after onboarding)
         try:
             login_data = {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD
+                "username": "newadmin",
+                "password": "newpass"
             }
             response = requests.post(f"{self.base_url}/login", json=login_data)
             
@@ -174,7 +174,7 @@ class BackendTester:
                 if "access_token" in data and "token_type" in data:
                     self.token = data["access_token"]
                     self.auth_headers = {"Authorization": f"Bearer {self.token}"}
-                    self.log_result("Authentication - Valid Login", True, "Successfully logged in with correct credentials")
+                    self.log_result("Authentication - Valid Login", True, "Successfully logged in with new admin credentials")
                 else:
                     self.log_result("Authentication - Valid Login", False, "Login response missing required fields", str(data))
             else:
