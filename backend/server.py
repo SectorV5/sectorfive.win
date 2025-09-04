@@ -834,6 +834,8 @@ async def get_blog_post(slug: str, request: Request):
 
 @api_router.post("/blog", response_model=BlogPost)
 async def create_blog_post(post_data: BlogPostCreate, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "blog_write_new")
+    
     existing = await db.blog_posts.find_one({"slug": post_data.slug})
     if existing:
         raise HTTPException(status_code=400, detail="Blog post with this slug already exists")
@@ -845,13 +847,16 @@ async def create_blog_post(post_data: BlogPostCreate, current_user: str = Depend
         excerpt_length = settings.get("auto_excerpt_length", 200)
         excerpt = extract_excerpt(post_data.content, excerpt_length)
     
+    # Get current user for author info
+    user = await db.users.find_one({"username": current_user})
+    
     post = BlogPost(
         title=post_data.title,
         slug=post_data.slug,
         content=post_data.content,
         excerpt=excerpt,
         tags=post_data.tags,
-        author=post_data.author,
+        author=post_data.author or user.get("display_name", current_user),
         featured_image=post_data.featured_image,
         published=post_data.published
     )
