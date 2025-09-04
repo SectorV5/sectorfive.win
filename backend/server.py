@@ -358,7 +358,8 @@ async def get_analytics(current_user: str = Depends(get_current_user)):
     unique_visitors = await db.analytics.distinct("ip_address")
     
     # Recent visits
-    recent_visits = await db.analytics.find().sort("timestamp", -1).limit(50).to_list(length=50)
+    recent_visits_raw = await db.analytics.find().sort("timestamp", -1).limit(50).to_list(length=50)
+    recent_visits = [Analytics(**visit).dict() for visit in recent_visits_raw]
     
     # Top pages
     pipeline = [
