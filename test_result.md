@@ -263,6 +263,9 @@
         - working: true
           agent: "testing"
           comment: "Contact form enhanced with dynamic cooldown from settings. Cooldown protection working correctly (respects contact_cooldown setting). Pagination support added to contact messages retrieval with total_results. Delete functionality for contact messages working properly"
+        - working: true
+          agent: "testing"
+          comment: "Regression test passed: Enhanced contact form with cooldown working correctly after admin credential changes. Dynamic cooldown, pagination, and delete functionality all operational."
 
 ## frontend:
   - task: "Retro UI Design"
