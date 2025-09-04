@@ -865,6 +865,28 @@ async def create_blog_post(post_data: BlogPostCreate, current_user: str = Depend
 
 @api_router.put("/blog/{post_id}")
 async def update_blog_post(post_id: str, post_data: BlogPostUpdate, current_user: str = Depends(get_current_user)):
+    # Check permission - can edit all posts or can edit own posts
+    post = await db.blog_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Blog post not found")
+    
+    # Get current user info
+    user = await db.users.find_one({"username": current_user})
+    user_display_name = user.get("display_name", current_user)
+    
+    # Check permissions
+    can_edit_all = await check_permission(current_user, "blog_edit_all")
+    can_edit_own = await check_permission(current_user, "blog_edit_own")
+    
+    if not can_edit_all:
+        if not can_edit_own:
+            raise HTTPException(status_code=403, detail="Permission denied: cannot edit blog posts")
+        
+        # Check if this is user's own post
+        post_author = post.get("author", "")
+        if post_author != user_display_name and post_author != current_user:
+            raise HTTPException(status_code=403, detail="Permission denied: can only edit your own posts")
+    
     # Auto-generate excerpt if not provided
     excerpt = post_data.excerpt
     if not excerpt:
@@ -877,7 +899,7 @@ async def update_blog_post(post_id: str, post_data: BlogPostUpdate, current_user
         "content": post_data.content,
         "excerpt": excerpt,
         "tags": post_data.tags,
-        "author": post_data.author,
+        "author": post_data.author or user_display_name,
         "featured_image": post_data.featured_image,
         "published": post_data.published,
         "updated_at": datetime.now(timezone.utc)
@@ -889,6 +911,8 @@ async def update_blog_post(post_id: str, post_data: BlogPostUpdate, current_user
 
 @api_router.delete("/blog/{post_id}")
 async def delete_blog_post(post_id: str, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "blog_delete_posts")
+    
     result = await db.blog_posts.delete_one({"id": post_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Blog post not found")
