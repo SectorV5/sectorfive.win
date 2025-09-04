@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Build a retro-style personal website for sectorfive.win with admin authentication, content management, blog system, file uploads, analytics, contact form, and old browser compatibility"
+## user_problem_statement: "Update this website from repository: write a comprehensive user friendly README.md explaining in detail easily how to setup this website to be up and running. and add all the commands to run on ubuntu and to install dependencies and everything else, to make venv, also update blog page for users and admin page just make it easier to sort through them, make it searchanble, by text, or date or a tag, and add option to add tags when writing blog posts. And if possible remove "Made with Emergent" floating thingie, and add more configuration connected to already established things inside the settings in /management-panel make this fully docker deployable project, go through all the code to make sure it would work, fully rewritte README.md to include instructions update docker compose file and write a script to make it easy to deploy if all that isn't done already."
 
 ## backend:
   - task: "Admin Authentication System"
