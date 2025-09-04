@@ -253,7 +253,7 @@ Testing is crucial for ensuring our APIs work correctly and handle edge cases pr
 
 This automated testing approach helps catch issues early and ensures a robust backend system."""
             }
-            response = requests.post(f"{self.base_url}/blog", data=post_data, headers=self.auth_headers)
+            response = requests.post(f"{self.base_url}/blog", json=post_data, headers=self.auth_headers)
             
             if response.status_code == 200:
                 created_post = response.json()
@@ -289,7 +289,7 @@ This automated testing approach helps catch issues early and ensures a robust ba
                     "title": "My Complete Journey into Backend Testing",
                     "content": "This post has been updated to include more comprehensive information about backend testing methodologies and best practices."
                 }
-                response = requests.put(f"{self.base_url}/blog/{created_post_id}", data=update_data, headers=self.auth_headers)
+                response = requests.put(f"{self.base_url}/blog/{created_post_id}", json=update_data, headers=self.auth_headers)
                 
                 if response.status_code == 200:
                     self.log_result("Blog System - Update Post", True, "Successfully updated blog post")
