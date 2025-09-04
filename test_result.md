@@ -209,6 +209,33 @@
         - working: true
           agent: "testing"
           comment: "Settings management fully tested: get settings, update settings (max file size, site title, site email), settings persistence all working correctly"
+        - working: true
+          agent: "testing"
+          comment: "Updated settings system tested with new background fields (background_type, background_value, background_image_url). Public settings endpoint (/api/public-settings) working correctly without authentication. All settings persistence and retrieval working properly"
+
+  - task: "Public Settings Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "New public settings endpoint (/api/public-settings) implemented and tested. Returns site_title and background_* fields without authentication as required. Correctly reflects admin setting updates"
+
+  - task: "Enhanced Contact Form with Cooldown"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Contact form enhanced with dynamic cooldown from settings. Cooldown protection working correctly (respects contact_cooldown setting). Pagination support added to contact messages retrieval with total_results. Delete functionality for contact messages working properly"
 
 ## frontend:
   - task: "Retro UI Design"
