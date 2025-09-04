@@ -1,7 +1,7 @@
 FROM node:18-alpine as build
 WORKDIR /app
 COPY package.json yarn.lock /app/
-RUN yarn install --frozen-lockfile
+RUN yarn install
 ARG REACT_APP_BACKEND_URL
 ENV REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
 COPY . /app
