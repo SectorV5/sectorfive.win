@@ -381,14 +381,53 @@ async def track_visit(request: Request, page_url: str):
 
 # Initialize default data
 async def initialize_data():
-    # Ensure an 'admin' user exists, regardless of old default user
+    # Ensure an 'admin' user exists as the owner with full permissions
     admin_user = await db.users.find_one({"username": "admin"})
     if not admin_user:
+        # Create owner permissions (full access to everything)
+        owner_permissions = UserPermissions(
+            # Blog permissions
+            blog_read_all=True,
+            blog_write_new=True,
+            blog_edit_own=True,
+            blog_edit_all=True,
+            blog_delete_posts=True,
+            # Page permissions
+            page_edit_homepage=True,
+            page_edit_all=True,
+            page_create=True,
+            page_delete=True,
+            # Settings permissions
+            settings_full_admin=True,
+            settings_edit_theme=True,
+            settings_edit_seo=True,
+            settings_edit_social=True,
+            settings_edit_email=True,
+            settings_edit_blog=True,
+            # User management permissions
+            users_view=True,
+            users_create=True,
+            users_edit=True,
+            users_delete=True,
+            # File management permissions
+            files_upload=True,
+            files_delete=True,
+            files_manage_all=True,
+            # Analytics permissions
+            analytics_view=True,
+            # Contact form permissions
+            contact_view=True,
+            contact_delete=True
+        )
+        
         admin = User(
             username="admin",
-            email="admin@example.com",
+            email="admin@sectorfive.win",
+            display_name="Site Owner",
             password_hash=hash_password("admin"),
-            must_change_password=True
+            must_change_password=True,
+            is_owner=True,
+            permissions=owner_permissions
         )
         await db.users.insert_one(admin.dict())
 
