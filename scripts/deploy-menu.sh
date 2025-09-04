@@ -127,7 +127,7 @@ deploy_app() {
 
 # Stop and remove all containers
 stop_app() {
-    echo -e "${YELLOW}Stopping Sectorfive Website...${NC}"
+    echo -e "${YELLOW}Stopping Personal Website...${NC}"
     cd "$ROOT_DIR"
     docker-compose down --remove-orphans
     echo -e "${GREEN}Application stopped successfully!${NC}"
