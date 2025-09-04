@@ -74,8 +74,8 @@ Inspired by Windows XP/Vista/7 Aero design with a nostalgic feel and modern func
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/sectorfive-website.git
-   cd sectorfive-website
+   git clone https://github.com/yourusername/personal-website-template.git
+   cd personal-website-template
    ```
 
 2. **Install Docker (Ubuntu)**
