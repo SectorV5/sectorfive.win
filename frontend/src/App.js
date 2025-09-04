@@ -604,6 +604,7 @@ const Admin = () => {
           {activeTab === 'dashboard' && <AdminDashboard />}
           {activeTab === 'pages' && <AdminPages />}
           {activeTab === 'blog' && <AdminBlog />}
+          {activeTab === 'gallery' && <AdminGallery />}
           {activeTab === 'analytics' && <AdminAnalytics />}
           {activeTab === 'contacts' && <AdminContacts />}
           {activeTab === 'settings' && <AdminSettings />}
