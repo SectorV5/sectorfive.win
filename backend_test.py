@@ -580,7 +580,7 @@ This automated testing approach helps catch issues early and ensures a robust ba
             print("    Waiting 5 seconds before submitting second message...")
             time.sleep(5)
             
-            response = requests.post(f"{self.base_url}/contact", data=contact_data2)
+            response = requests.post(f"{self.base_url}/contact", json=contact_data2)
             
             if response.status_code == 200:
                 self.log_result("Contact Form - Multiple Submissions After Cooldown", True, "Successfully submitted second contact message after waiting")
