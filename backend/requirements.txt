@@ -25,4 +25,5 @@ jq>=1.6.0
 typer>=0.9.0
 aiofiles>=24.1.0
 user-agents>=2.2.0
+ua-parser>=0.18.0
 geoip2>=4.7.0
