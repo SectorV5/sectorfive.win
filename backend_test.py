@@ -820,6 +820,7 @@ This automated testing approach helps catch issues early and ensures a robust ba
         print("=" * 80)
         
         # Run all test suites
+        self.test_admin_onboarding_flow()
         self.test_authentication_system()
         self.test_content_management()
         self.test_blog_system()
