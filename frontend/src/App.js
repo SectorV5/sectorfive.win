@@ -71,7 +71,7 @@ const Navigation = ({ pages }) => {
   return (
     <nav className="retro-nav">
       <div className="nav-container">
-        <Link to="/" className="nav-logo">🏠 Sectorfive.win</Link>
+        <Link to="/" className="nav-logo">🏠 Personal Website</Link>
         <div className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/blog">Blog</Link>
@@ -96,7 +96,7 @@ const Home = () => {
         const response = await axios.get(`${API}/page/home`);
         setContent(response.data.content);
       } catch (error) {
-        setContent('Welcome to Sectorfive.win!');
+        setContent('Welcome to your personal website!');
       } finally {
         setLoading(false);
       }
@@ -106,7 +106,7 @@ const Home = () => {
   if (loading) return (<div className="loading"><div className="retro-spinner"></div>Loading...</div>);
   return (
     <div className="page-container">
-      <RetroWindow title="🏠 Welcome to Sectorfive.win" className="main-content">
+      <RetroWindow title="🏠 Welcome to Your Website" className="main-content">
         <div className="content" dangerouslySetInnerHTML={{ __html: content }} />
       </RetroWindow>
     </div>
@@ -114,33 +114,155 @@ const Home = () => {
 };
 
 const Blog = () => {
-  const [posts, setPosts] = useState([]);
+  const [blogData, setBlogData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selectedTags, setSelectedTags] = useState('');
+  const [page, setPage] = useState(1);
+  const [allTags, setAllTags] = useState([]);
+  
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(`${API}/blog`);
-        setPosts(response.data);
-      } catch (error) {
-      } finally { setLoading(false); }
-    };
     fetchPosts();
-  }, []);
+    fetchTags();
+  }, [search, selectedTags, page]);
+  
+  const fetchPosts = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '6',
+        published: 'true'
+      });
+      if (search) params.append('search', search);
+      if (selectedTags) params.append('tags', selectedTags);
+      
+      const response = await axios.get(`${API}/blog?${params}`);
+      setBlogData(response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally { 
+      setLoading(false); 
+    }
+  };
+  
+  const fetchTags = async () => {
+    try {
+      const response = await axios.get(`${API}/blog/tags`);
+      setAllTags(response.data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+  
   if (loading) return <div className="loading">Loading blog posts...</div>;
+  
   return (
     <div className="page-container">
       <RetroWindow title="📝 Blog Posts" className="main-content">
-        {posts.length > 0 ? (
-          <div className="blog-posts">
-            {posts.map(post => (
-              <div key={post.id} className="blog-post-preview">
-                <h3><Link to={`/blog/${post.slug}`}>{post.title}</Link></h3>
-                <div className="post-meta">📅 {new Date(post.created_at).toLocaleDateString()}</div>
-                <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content }} />
-              </div>
-            ))}
+        {/* Search and Filter Controls */}
+        <div className="blog-controls">
+          <div className="search-section">
+            <input 
+              type="text" 
+              placeholder="Search posts..." 
+              value={search} 
+              onChange={(e)=>setSearch(e.target.value)} 
+              className="retro-input" 
+            />
+            <input 
+              type="text" 
+              placeholder="Filter by tags (comma-separated)..." 
+              value={selectedTags} 
+              onChange={(e)=>setSelectedTags(e.target.value)} 
+              className="retro-input" 
+            />
           </div>
-        ) : (<p>No blog posts yet. Check back soon!</p>)}
+          
+          {/* Tag Cloud */}
+          {allTags.length > 0 && (
+            <div className="tag-cloud">
+              <h4>Popular Tags:</h4>
+              <div className="tags">
+                {allTags.slice(0, 10).map(tag => (
+                  <span 
+                    key={tag.name} 
+                    className={`tag ${selectedTags.includes(tag.name) ? 'active' : ''}`}
+                    onClick={() => {
+                      if (selectedTags.includes(tag.name)) {
+                        setSelectedTags(selectedTags.replace(tag.name, '').replace(/,\s*,/g, ',').replace(/^,|,$/g, ''));
+                      } else {
+                        setSelectedTags(selectedTags ? `${selectedTags}, ${tag.name}` : tag.name);
+                      }
+                    }}
+                  >
+                    {tag.name} ({tag.count})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {blogData && blogData.posts.length > 0 ? (
+          <>
+            <div className="blog-posts">
+              {blogData.posts.map(post => (
+                <div key={post.id} className="blog-post-preview">
+                  {post.featured_image && (
+                    <div className="post-image">
+                      <img src={post.featured_image} alt={post.title} />
+                    </div>
+                  )}
+                  <div className="post-header">
+                    <h3><Link to={`/blog/${post.slug}`}>{post.title}</Link></h3>
+                    <div className="post-meta">
+                      📅 {new Date(post.created_at).toLocaleDateString()}
+                      {post.author && <span> • ✍️ {post.author}</span>}
+                    </div>
+                  </div>
+                  
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="post-tags">
+                      {post.tags.map(tag => (
+                        <span key={tag} className="tag" onClick={() => setSelectedTags(tag)}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="post-content">
+                    {post.excerpt || (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content)}
+                  </div>
+                  
+                  <Link to={`/blog/${post.slug}`} className="read-more">Read More →</Link>
+                </div>
+              ))}
+            </div>
+            
+            {blogData.pagination && blogData.pagination.total_pages > 1 && (
+              <div className="pagination">
+                <button 
+                  onClick={() => setPage(Math.max(1, page - 1))} 
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="current-page">
+                  Page {blogData.pagination.current_page} of {blogData.pagination.total_pages}
+                </span>
+                <button 
+                  onClick={() => setPage(Math.min(blogData.pagination.total_pages, page + 1))} 
+                  disabled={page === blogData.pagination.total_pages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p>No blog posts found. {search || selectedTags ? 'Try adjusting your search or filters.' : 'Check back soon!'}</p>
+        )}
       </RetroWindow>
     </div>
   );
@@ -372,32 +494,315 @@ const AdminPages = () => {
 };
 
 const AdminBlog = () => {
-  const [posts, setPosts] = useState([]);
+  const [blogData, setBlogData] = useState(null);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState({ title: '', slug: '', content: '' });
-  useEffect(() => { fetchPosts(); }, []);
-  const fetchPosts = async () => { try { const response = await axios.get(`${API}/blog`); setPosts(response.data); } catch (error) {} };
-  const handleCreate = async (e) => { e.preventDefault(); try { await apiCall('/blog', { method: 'POST', data: formData }); setCreating(false); setFormData({ title: '', slug: '', content: '' }); fetchPosts(); } catch (error) { alert('Error creating post: ' + (error.response?.data?.detail || error.message)); } };
-  const handleUpdate = async (e) => { e.preventDefault(); try { await apiCall(`/blog/${editing.id}`, { method: 'PUT', data: { title: formData.title, content: formData.content } }); setEditing(null); setFormData({ title: '', slug: '', content: '' }); fetchPosts(); } catch (error) { alert('Error updating post: ' + (error.response?.data?.detail || error.message)); } };
-  const handleDelete = async (post) => { if (window.confirm(`Delete post "${post.title}"?`)) { try { await apiCall(`/blog/${post.id}`, { method: 'DELETE' }); fetchPosts(); } catch (error) { alert('Error deleting post: ' + (error.response?.data?.detail || error.message)); } } };
-  const startEdit = (post) => { setEditing(post); setFormData({ title: post.title, slug: post.slug, content: post.content }); };
-  const cancelEdit = () => { setEditing(null); setCreating(false); setFormData({ title: '', slug: '', content: '' }); };
+  const [search, setSearch] = useState('');
+  const [filterTags, setFilterTags] = useState('');
+  const [filterAuthor, setFilterAuthor] = useState('');
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [page, setPage] = useState(1);
+  const [formData, setFormData] = useState({
+    title: '', slug: '', content: '', excerpt: '', tags: [], 
+    featured_image: '', published: true, meta_description: ''
+  });
+  const [tagInput, setTagInput] = useState('');
+  
+  useEffect(() => { fetchPosts(); }, [search, filterTags, filterAuthor, showDrafts, page]);
+  
+  const fetchPosts = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10'
+      });
+      if (search) params.append('search', search);
+      if (filterTags) params.append('tags', filterTags);
+      if (filterAuthor) params.append('author', filterAuthor);
+      if (showDrafts !== null) params.append('published', (!showDrafts).toString());
+      
+      const response = await axios.get(`${API}/blog?${params}`);
+      setBlogData(response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+  
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const postData = {
+        ...formData,
+        tags: tagInput.split(',').map(tag => tag.trim()).filter(tag => tag)
+      };
+      await apiCall('/blog', { method: 'POST', data: postData });
+      setCreating(false);
+      resetForm();
+      fetchPosts();
+    } catch (error) {
+      alert('Error creating post: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+  
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const postData = {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt,
+        tags: tagInput.split(',').map(tag => tag.trim()).filter(tag => tag),
+        featured_image: formData.featured_image,
+        published: formData.published,
+        meta_description: formData.meta_description
+      };
+      await apiCall(`/blog/${editing.id}`, { method: 'PUT', data: postData });
+      setEditing(null);
+      resetForm();
+      fetchPosts();
+    } catch (error) {
+      alert('Error updating post: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+  
+  const handleDelete = async (post) => {
+    if (window.confirm(`Delete post "${post.title}"?`)) {
+      try {
+        await apiCall(`/blog/${post.id}`, { method: 'DELETE' });
+        fetchPosts();
+      } catch (error) {
+        alert('Error deleting post: ' + (error.response?.data?.detail || error.message));
+      }
+    }
+  };
+  
+  const startEdit = (post) => {
+    setEditing(post);
+    setFormData({
+      title: post.title,
+      slug: post.slug,
+      content: post.content,
+      excerpt: post.excerpt || '',
+      featured_image: post.featured_image || '',
+      published: post.published,
+      meta_description: post.meta_description || ''
+    });
+    setTagInput(post.tags ? post.tags.join(', ') : '');
+  };
+  
+  const resetForm = () => {
+    setFormData({
+      title: '', slug: '', content: '', excerpt: '', tags: [],
+      featured_image: '', published: true, meta_description: ''
+    });
+    setTagInput('');
+  };
+  
+  const cancelEdit = () => {
+    setEditing(null);
+    setCreating(false);
+    resetForm();
+  };
   if (creating || editing) return (
     <div className="admin-section">
       <h3>{creating ? 'Create New Blog Post' : `Edit: ${editing.title}`}</h3>
       <form onSubmit={creating ? handleCreate : handleUpdate}>
-        <div className="form-group"><label>Title:</label><input type="text" value={formData.title} onChange={(e)=>setFormData({ ...formData, title: e.target.value })} required className="retro-input" /></div>
-        {creating && (<div className="form-group"><label>Slug (URL path):</label><input type="text" value={formData.slug} onChange={(e)=>setFormData({ ...formData, slug: e.target.value })} required className="retro-input" placeholder="e.g., my-first-post" /></div>)}
-        <div className="form-group"><label>Content:</label><div className="editor-container"><ReactQuill theme="snow" value={formData.content} onChange={(content)=>setFormData({ ...formData, content })} modules={quillModules} formats={quillFormats} /></div></div>
-        <div className="admin-controls"><RetroButton type="submit">{creating ? 'Create Post' : 'Update Post'}</RetroButton><RetroButton type="button" onClick={cancelEdit}>Cancel</RetroButton></div>
+        <div className="form-group">
+          <label>Title:</label>
+          <input 
+            type="text" 
+            value={formData.title} 
+            onChange={(e)=>setFormData({ ...formData, title: e.target.value })} 
+            required 
+            className="retro-input" 
+          />
+        </div>
+        
+        {creating && (
+          <div className="form-group">
+            <label>Slug (URL path):</label>
+            <input 
+              type="text" 
+              value={formData.slug} 
+              onChange={(e)=>setFormData({ ...formData, slug: e.target.value })} 
+              required 
+              className="retro-input" 
+              placeholder="e.g., my-first-post" 
+            />
+          </div>
+        )}
+        
+        <div className="form-group">
+          <label>Excerpt (optional):</label>
+          <textarea 
+            value={formData.excerpt} 
+            onChange={(e)=>setFormData({ ...formData, excerpt: e.target.value })} 
+            className="retro-textarea" 
+            rows="3"
+            placeholder="Brief description (auto-generated if empty)"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Tags (comma-separated):</label>
+          <input 
+            type="text" 
+            value={tagInput} 
+            onChange={(e)=>setTagInput(e.target.value)} 
+            className="retro-input" 
+            placeholder="e.g., tech, programming, tutorial"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Featured Image URL (optional):</label>
+          <input 
+            type="url" 
+            value={formData.featured_image} 
+            onChange={(e)=>setFormData({ ...formData, featured_image: e.target.value })} 
+            className="retro-input" 
+            placeholder="https://..."
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Meta Description (SEO):</label>
+          <textarea 
+            value={formData.meta_description} 
+            onChange={(e)=>setFormData({ ...formData, meta_description: e.target.value })} 
+            className="retro-textarea" 
+            rows="2"
+            placeholder="SEO description for search engines"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>
+            <input 
+              type="checkbox" 
+              checked={formData.published} 
+              onChange={(e)=>setFormData({ ...formData, published: e.target.checked })} 
+            />
+            {' '}Published (uncheck to save as draft)
+          </label>
+        </div>
+        
+        <div className="form-group">
+          <label>Content:</label>
+          <div className="editor-container">
+            <ReactQuill 
+              theme="snow" 
+              value={formData.content} 
+              onChange={(content)=>setFormData({ ...formData, content })} 
+              modules={quillModules} 
+              formats={quillFormats} 
+            />
+          </div>
+        </div>
+        
+        <div className="admin-controls">
+          <RetroButton type="submit">
+            {creating ? 'Create Post' : 'Update Post'}
+          </RetroButton>
+          <RetroButton type="button" onClick={cancelEdit}>Cancel</RetroButton>
+        </div>
       </form>
     </div>
   );
   return (
     <div className="admin-section">
-      <div className="admin-controls"><h3>📝 Blog Management</h3><RetroButton onClick={() => setCreating(true)}>Create New Post</RetroButton></div>
-      <table className="admin-table"><thead><tr><th>Title</th><th>Slug</th><th>Created</th><th>Actions</th></tr></thead><tbody>{posts.map(post => (<tr key={post.id}><td>{post.title}</td><td>{post.slug}</td><td>{new Date(post.created_at).toLocaleDateString()}</td><td><RetroButton onClick={() => startEdit(post)}>Edit</RetroButton><RetroButton onClick={() => handleDelete(post)}>Delete</RetroButton></td></tr>))}</tbody></table>
+      <div className="admin-controls">
+        <h3>📝 Blog Management</h3>
+        <RetroButton onClick={() => setCreating(true)}>Create New Post</RetroButton>
+      </div>
+      
+      <div className="admin-controls">
+        <input 
+          type="text" 
+          placeholder="Search posts..." 
+          value={search} 
+          onChange={(e)=>setSearch(e.target.value)} 
+          className="retro-input" 
+        />
+        <input 
+          type="text" 
+          placeholder="Filter by tags..." 
+          value={filterTags} 
+          onChange={(e)=>setFilterTags(e.target.value)} 
+          className="retro-input" 
+        />
+        <input 
+          type="text" 
+          placeholder="Filter by author..." 
+          value={filterAuthor} 
+          onChange={(e)=>setFilterAuthor(e.target.value)} 
+          className="retro-input" 
+        />
+        <label>
+          <input 
+            type="checkbox" 
+            checked={showDrafts} 
+            onChange={(e)=>setShowDrafts(e.target.checked)} 
+          />
+          {' '}Show drafts only
+        </label>
+      </div>
+      
+      {blogData && (
+        <>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Tags</th>
+                <th>Author</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {blogData.posts.map(post => (
+                <tr key={post.id}>
+                  <td>{post.title}</td>
+                  <td>
+                    <span className={`status ${post.published ? 'published' : 'draft'}`}>
+                      {post.published ? '✅ Published' : '📝 Draft'}
+                    </span>
+                  </td>
+                  <td>{post.tags ? post.tags.join(', ') : ''}</td>
+                  <td>{post.author}</td>
+                  <td>{new Date(post.created_at).toLocaleDateString()}</td>
+                  <td>
+                    <RetroButton onClick={() => startEdit(post)}>Edit</RetroButton>
+                    <RetroButton onClick={() => handleDelete(post)}>Delete</RetroButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {blogData.pagination && blogData.pagination.total_pages > 1 && (
+            <div className="pagination">
+              <button 
+                onClick={() => setPage(Math.max(1, page - 1))} 
+                disabled={page === 1}
+              >
+                Previous
+              </button>
+              <span className="current-page">
+                Page {blogData.pagination.current_page} of {blogData.pagination.total_pages}
+              </span>
+              <button 
+                onClick={() => setPage(Math.min(blogData.pagination.total_pages, page + 1))} 
+                disabled={page === blogData.pagination.total_pages}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -434,7 +839,7 @@ const AdminContacts = () => {
   useEffect(() => { fetchContacts(); }, [search, page]);
   const fetchContacts = async () => { setLoading(true); try { const params = new URLSearchParams({ page: page.toString(), limit: '10' }); if (search) params.append('search', search); const response = await apiCall(`/contact-messages?${params}`); setContacts(response.data); } catch (error) {} finally { setLoading(false); } };
   const handleDelete = async (messageId) => { if (window.confirm('Delete this message?')) { try { await apiCall(`/contact-messages/${messageId}`, { method: 'DELETE' }); fetchContacts(); } catch (error) { alert('Error deleting message'); } } };
-  const mailtoHref = (m) => { const subject = `Re: Your message to Sectorfive.win`; const body = `Hi ${m.name || ''},%0D%0A%0D%0AThanks for reaching out. Below is the message you sent:%0D%0A%0D%0A${encodeURIComponent(m.message)}%0D%0A%0D%0A--%0D%0A`; return `mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(subject)}&body=${body}`; };
+  const mailtoHref = (m) => { const subject = `Re: Your message`; const body = `Hi ${m.name || ''},%0D%0A%0D%0AThanks for reaching out. Below is the message you sent:%0D%0A%0D%0A${encodeURIComponent(m.message)}%0D%0A%0D%0A--%0D%0A`; return `mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(subject)}&body=${body}`; };
   if (loading && !contacts) return <div>Loading contacts...</div>;
   return (
     <div className="admin-section">
@@ -502,7 +907,7 @@ function App() {
       else if (s.background_type === 'image') { document.body.style.background = `url("${s.background_image_url}") center / cover no-repeat fixed`; }
       document.body.style.backgroundAttachment = 'fixed';
     };
-    axios.get(`${API}/public-settings`).then(res => { applyBackground(res.data); document.title = res.data.site_title || 'Sectorfive Personal Website'; }).catch(() => {});
+    axios.get(`${API}/public-settings`).then(res => { applyBackground(res.data); document.title = res.data.site_title || 'Personal Website Template'; }).catch(() => {});
   }, []);
   return (
     <AuthProvider>

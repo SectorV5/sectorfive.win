@@ -8,9 +8,9 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_DATABASE=sectorfive_db
+      - MONGO_INITDB_DATABASE=personal_website_db
     networks:
-      - sectorfive_network
+      - website_network
     
   backend:
     build:
@@ -18,7 +18,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - MONGO_URL=mongodb://mongo:27017
-      - DB_NAME=sectorfive_db
+      - DB_NAME=personal_website_db
       - CORS_ORIGINS=*
       - UPLOAD_PATH=/app/uploads
     depends_on:
@@ -30,7 +30,7 @@ services:
       - ./backend/uploads:/app/uploads
       - ./backups:/app/backups
     networks:
-      - sectorfive_network
+      - website_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
       interval: 30s
@@ -50,11 +50,11 @@ services:
     ports:
       - "80:80"
     networks:
-      - sectorfive_network
+      - website_network
       
 volumes:
   mongo_data:
 
 networks:
-  sectorfive_network:
+  website_network:
     driver: bridge
