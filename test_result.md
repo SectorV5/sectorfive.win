@@ -171,11 +171,17 @@
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Custom analytics with IP, user agent, country tracking"
+        - working: false
+          agent: "testing"
+          comment: "Initial test failed due to MongoDB ObjectId serialization error in analytics endpoint"
+        - working: true
+          agent: "testing"
+          comment: "Fixed ObjectId serialization issue. Analytics system fully tested: visit tracking, analytics retrieval with total visits, unique visitors, recent visits, and top pages all working correctly"
   
   - task: "Contact Form"
     implemented: true
