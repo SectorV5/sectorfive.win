@@ -185,7 +185,7 @@ class BackendTester:
         # Test 2: Invalid login
         try:
             invalid_login = {
-                "username": TEST_USERNAME,
+                "username": "newadmin",
                 "password": "wrongpassword"
             }
             response = requests.post(f"{self.base_url}/login", json=invalid_login)
