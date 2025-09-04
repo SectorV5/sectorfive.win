@@ -1173,6 +1173,164 @@ async def get_uploaded_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
 
+# Gallery endpoints
+@api_router.get("/gallery")
+async def get_gallery_images(
+    search: Optional[str] = None,
+    tags: Optional[str] = None,
+    featured_only: Optional[bool] = None,
+    page: int = 1,
+    limit: int = 20
+):
+    query = {}
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    if tags:
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+        if tag_list:
+            query["tags"] = {"$in": tag_list}
+    if featured_only:
+        query["is_featured"] = True
+    
+    total_count = await db.gallery_images.count_documents(query)
+    skip = (page - 1) * limit
+    images_raw = await db.gallery_images.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    images = [GalleryImage(**img).dict() for img in images_raw]
+    
+    # Convert file paths to URLs
+    for img in images:
+        img["file_url"] = f"/api/uploads/{img['filename']}"
+    
+    return {
+        "images": images,
+        "pagination": {
+            "current_page": page,
+            "total_pages": (total_count + limit - 1) // limit,
+            "total_results": total_count,
+            "has_next": page * limit < total_count,
+            "has_prev": page > 1
+        }
+    }
+
+@api_router.post("/gallery")
+async def upload_gallery_image(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    tags: Optional[str] = Form(None),
+    is_featured: bool = Form(False),
+    current_user: str = Depends(get_current_user)
+):
+    await require_permission(current_user, "files_upload")
+    
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+    
+    settings = await db.settings.find_one()
+    max_size = settings["max_file_size"] if settings else 5368709120
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else ''
+    unique_filename = f"{uuid.uuid4()}.{file_extension}" if file_extension else str(uuid.uuid4())
+    file_path = UPLOAD_DIR / unique_filename
+    
+    async with aiofiles.open(file_path, 'wb') as f:
+        content = await file.read()
+        if len(content) > max_size:
+            raise HTTPException(status_code=413, detail="File too large")
+        await f.write(content)
+    
+    # Parse tags
+    tag_list = []
+    if tags:
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+    
+    # Create gallery image record
+    gallery_image = GalleryImage(
+        title=title,
+        description=description,
+        filename=unique_filename,
+        file_path=str(file_path),
+        file_size=len(content),
+        mime_type=file.content_type,
+        tags=tag_list,
+        is_featured=is_featured,
+        uploaded_by=current_user
+    )
+    
+    await db.gallery_images.insert_one(gallery_image.dict())
+    
+    result = gallery_image.dict()
+    result["file_url"] = f"/api/uploads/{unique_filename}"
+    return result
+
+@api_router.get("/gallery/{image_id}")
+async def get_gallery_image(image_id: str):
+    image = await db.gallery_images.find_one({"id": image_id})
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    result = GalleryImage(**image).dict()
+    result["file_url"] = f"/api/uploads/{result['filename']}"
+    return result
+
+@api_router.put("/gallery/{image_id}")
+async def update_gallery_image(
+    image_id: str,
+    image_data: GalleryImageUpdate,
+    current_user: str = Depends(get_current_user)
+):
+    await require_permission(current_user, "files_manage_all")
+    
+    existing_image = await db.gallery_images.find_one({"id": image_id})
+    if not existing_image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    await db.gallery_images.update_one(
+        {"id": image_id},
+        {"$set": image_data.dict()}
+    )
+    
+    updated_image = await db.gallery_images.find_one({"id": image_id})
+    result = GalleryImage(**updated_image).dict()
+    result["file_url"] = f"/api/uploads/{result['filename']}"
+    return result
+
+@api_router.delete("/gallery/{image_id}")
+async def delete_gallery_image(image_id: str, current_user: str = Depends(get_current_user)):
+    await require_permission(current_user, "files_delete")
+    
+    image = await db.gallery_images.find_one({"id": image_id})
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Delete file from filesystem
+    file_path = UPLOAD_DIR / image["filename"]
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete from database
+    result = await db.gallery_images.delete_one({"id": image_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    return {"message": "Image deleted successfully"}
+
+@api_router.get("/gallery/tags")
+async def get_gallery_tags():
+    """Get all unique tags used in gallery images"""
+    pipeline = [
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$project": {"name": "$_id", "count": 1, "_id": 0}}
+    ]
+    tags = await db.gallery_images.aggregate(pipeline).to_list(length=None)
+    return tags
+
 # Analytics endpoints
 @api_router.get("/analytics")
 async def get_analytics(
