@@ -86,7 +86,7 @@ install_docker_compose() {
 
 # Deploy the application
 deploy_app() {
-    echo -e "${YELLOW}Deploying Sectorfive Website...${NC}"
+    echo -e "${YELLOW}Deploying Personal Website...${NC}"
     cd "$ROOT_DIR"
     
     # Build and start containers
