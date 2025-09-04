@@ -40,13 +40,74 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 # Models
+class UserPermissions(BaseModel):
+    # Blog permissions
+    blog_read_all: bool = True
+    blog_write_new: bool = False
+    blog_edit_own: bool = False
+    blog_edit_all: bool = False
+    blog_delete_posts: bool = False
+    
+    # Page permissions
+    page_edit_homepage: bool = False
+    page_edit_specific: List[str] = Field(default_factory=list)  # List of page IDs
+    page_edit_all: bool = False
+    page_create: bool = False
+    page_delete: bool = False
+    
+    # Settings permissions
+    settings_view_only: bool = True
+    settings_edit_theme: bool = False
+    settings_edit_seo: bool = False
+    settings_edit_social: bool = False
+    settings_edit_email: bool = False
+    settings_edit_blog: bool = False
+    settings_full_admin: bool = False
+    
+    # User management permissions
+    users_view: bool = False
+    users_create: bool = False
+    users_edit: bool = False
+    users_delete: bool = False
+    
+    # File management permissions
+    files_upload: bool = False
+    files_delete: bool = False
+    files_manage_all: bool = False
+    
+    # Analytics permissions
+    analytics_view: bool = False
+    
+    # Contact form permissions
+    contact_view: bool = False
+    contact_delete: bool = False
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     email: str
     password_hash: str
+    display_name: str = ""
     must_change_password: bool = True
+    is_owner: bool = False  # The original admin user
+    is_active: bool = True
+    permissions: UserPermissions = Field(default_factory=UserPermissions)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: Optional[datetime] = None
+    created_by: Optional[str] = None  # User ID who created this user
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    display_name: str = ""
+    permissions: Optional[UserPermissions] = None
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    display_name: Optional[str] = None
+    is_active: Optional[bool] = None
+    permissions: Optional[UserPermissions] = None
 
 class UserLogin(BaseModel):
     username: str
