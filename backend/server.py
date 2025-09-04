@@ -205,7 +205,7 @@ class Settings(BaseModel):
     custom_css: Optional[str] = None
     
     # SEO Settings
-    meta_description: str = "Sectorfive Personal Website"
+    meta_description: str = "Personal Website"
     meta_keywords: str = "personal, website, blog, portfolio"
     google_analytics_id: Optional[str] = None
     google_search_console: Optional[str] = None
