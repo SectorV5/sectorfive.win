@@ -507,63 +507,104 @@ This automated testing approach helps catch issues early and ensures a robust ba
         """Test settings retrieval and updates"""
         print("\n=== Testing Settings Management ===")
         
+        # Test 1: Get public settings (no auth required)
+        try:
+            response = requests.get(f"{self.base_url}/public-settings")
+            
+            if response.status_code == 200:
+                settings = response.json()
+                required_fields = ["site_title", "background_type", "background_value", "background_image_url"]
+                
+                if all(field in settings for field in required_fields):
+                    self.log_result("Settings Management - Get Public Settings", True, 
+                                  f"Successfully retrieved public settings: {settings['site_title']}")
+                else:
+                    missing_fields = [field for field in required_fields if field not in settings]
+                    self.log_result("Settings Management - Get Public Settings", False, f"Public settings response missing fields: {missing_fields}", str(settings))
+            else:
+                self.log_result("Settings Management - Get Public Settings", False, f"Public settings retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Settings Management - Get Public Settings", False, "Public settings retrieval failed", str(e))
+        
         if not self.token:
-            self.log_result("Settings Management", False, "No authentication token available")
+            self.log_result("Settings Management", False, "No authentication token available for admin settings")
             return
         
-        # Test 1: Get current settings
+        # Test 2: Get current admin settings
         try:
             response = requests.get(f"{self.base_url}/settings", headers=self.auth_headers)
             
             if response.status_code == 200:
                 settings = response.json()
-                required_fields = ["max_file_size", "site_title", "site_email"]
+                required_fields = ["max_file_size", "site_title", "site_email", "contact_cooldown"]
                 
                 if all(field in settings for field in required_fields):
-                    self.log_result("Settings Management - Get Settings", True, 
-                                  f"Successfully retrieved settings: {settings['site_title']}")
+                    self.log_result("Settings Management - Get Admin Settings", True, 
+                                  f"Successfully retrieved admin settings: {settings['site_title']}")
                 else:
                     missing_fields = [field for field in required_fields if field not in settings]
-                    self.log_result("Settings Management - Get Settings", False, f"Settings response missing fields: {missing_fields}", str(settings))
+                    self.log_result("Settings Management - Get Admin Settings", False, f"Admin settings response missing fields: {missing_fields}", str(settings))
             else:
-                self.log_result("Settings Management - Get Settings", False, f"Settings retrieval failed with status {response.status_code}", response.text)
+                self.log_result("Settings Management - Get Admin Settings", False, f"Admin settings retrieval failed with status {response.status_code}", response.text)
         except Exception as e:
-            self.log_result("Settings Management - Get Settings", False, "Settings retrieval failed", str(e))
+            self.log_result("Settings Management - Get Admin Settings", False, "Admin settings retrieval failed", str(e))
         
-        # Test 2: Update settings
+        # Test 3: Update settings with new background fields
         try:
             update_data = {
                 "max_file_size": 5368709120,  # 5GB
                 "site_title": "Sectorfive Personal Website - Updated",
-                "site_email": "admin@sectorfive.win"
+                "site_email": "admin@sectorfive.win",
+                "contact_cooldown": 180,  # 3 minutes
+                "background_type": "gradient",
+                "background_value": "linear-gradient(45deg, #667eea 0%, #764ba2 100%)",
+                "background_image_url": "https://example.com/bg.jpg"
             }
             response = requests.put(f"{self.base_url}/settings", data=update_data, headers=self.auth_headers)
             
             if response.status_code == 200:
                 result = response.json()
                 if "message" in result:
-                    self.log_result("Settings Management - Update Settings", True, "Successfully updated settings")
+                    self.log_result("Settings Management - Update Settings with Background", True, "Successfully updated settings with background fields")
                 else:
-                    self.log_result("Settings Management - Update Settings", False, "Settings update response missing message field", str(result))
+                    self.log_result("Settings Management - Update Settings with Background", False, "Settings update response missing message field", str(result))
             else:
-                self.log_result("Settings Management - Update Settings", False, f"Settings update failed with status {response.status_code}", response.text)
+                self.log_result("Settings Management - Update Settings with Background", False, f"Settings update failed with status {response.status_code}", response.text)
         except Exception as e:
-            self.log_result("Settings Management - Update Settings", False, "Settings update failed", str(e))
+            self.log_result("Settings Management - Update Settings with Background", False, "Settings update failed", str(e))
         
-        # Test 3: Verify settings were updated
+        # Test 4: Verify settings were updated and background fields persisted
         try:
             response = requests.get(f"{self.base_url}/settings", headers=self.auth_headers)
             
             if response.status_code == 200:
                 settings = response.json()
-                if settings.get("site_title") == "Sectorfive Personal Website - Updated":
-                    self.log_result("Settings Management - Verify Update", True, "Settings update was persisted correctly")
+                if (settings.get("site_title") == "Sectorfive Personal Website - Updated" and
+                    settings.get("background_type") == "gradient" and
+                    settings.get("contact_cooldown") == 180):
+                    self.log_result("Settings Management - Verify Background Update", True, "Settings update with background fields was persisted correctly")
                 else:
-                    self.log_result("Settings Management - Verify Update", False, "Settings update was not persisted", str(settings))
+                    self.log_result("Settings Management - Verify Background Update", False, "Settings update was not persisted correctly", str(settings))
             else:
-                self.log_result("Settings Management - Verify Update", False, f"Settings verification failed with status {response.status_code}", response.text)
+                self.log_result("Settings Management - Verify Background Update", False, f"Settings verification failed with status {response.status_code}", response.text)
         except Exception as e:
-            self.log_result("Settings Management - Verify Update", False, "Settings verification failed", str(e))
+            self.log_result("Settings Management - Verify Background Update", False, "Settings verification failed", str(e))
+        
+        # Test 5: Verify public settings reflect the updates
+        try:
+            response = requests.get(f"{self.base_url}/public-settings")
+            
+            if response.status_code == 200:
+                public_settings = response.json()
+                if (public_settings.get("site_title") == "Sectorfive Personal Website - Updated" and
+                    public_settings.get("background_type") == "gradient"):
+                    self.log_result("Settings Management - Verify Public Settings Update", True, "Public settings correctly reflect admin updates")
+                else:
+                    self.log_result("Settings Management - Verify Public Settings Update", False, "Public settings do not reflect admin updates", str(public_settings))
+            else:
+                self.log_result("Settings Management - Verify Public Settings Update", False, f"Public settings verification failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Settings Management - Verify Public Settings Update", False, "Public settings verification failed", str(e))
     
     def run_all_tests(self):
         """Run all backend tests"""
