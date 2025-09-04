@@ -1823,15 +1823,17 @@ This automated testing approach helps catch issues early and ensures a robust ba
         print(f"⏰ Started at: {datetime.now().isoformat()}")
         print("=" * 80)
         
-        # Run enhanced test suites focusing on new features
+        # First establish authentication
+        self.test_admin_onboarding_flow()
+        self.test_authentication_system()
+        
+        # Now run enhanced test suites with proper authentication
         self.test_enhanced_authentication_flow()
         self.test_enhanced_user_management()
         self.test_permission_system()
         self.test_backup_system()
         
-        # Run core regression tests
-        self.test_admin_onboarding_flow()
-        self.test_authentication_system()
+        # Run remaining regression tests
         self.test_content_management()
         self.test_blog_system()
         self.test_enhanced_blog_system()
