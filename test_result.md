@@ -407,7 +407,11 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus:
+    - "Advanced Blog Search System"
+    - "Enhanced Blog System with Tags and Excerpts" 
+    - "Extended Settings Configuration"
+    - "Docker Configuration Updates"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
