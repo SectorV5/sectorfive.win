@@ -248,6 +248,33 @@ class ContactForm(BaseModel):
     email: str
     message: str
 
+class GalleryImage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: Optional[str] = None
+    filename: str
+    file_path: str
+    file_size: int
+    mime_type: str
+    width: Optional[int] = None
+    height: Optional[int] = None
+    tags: List[str] = Field(default_factory=list)
+    is_featured: bool = False
+    uploaded_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class GalleryImageCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_featured: bool = False
+
+class GalleryImageUpdate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_featured: bool = False
+
 # Helper functions
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
