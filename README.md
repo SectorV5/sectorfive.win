@@ -93,8 +93,8 @@ A modern, retro-styled personal website built with React, FastAPI, and MongoDB. 
    ```
 
 4. **Access the application**
-   - Website: http://your-server-ip/
-   - Admin Panel: http://your-server-ip/ (login required)
+   - Website: http://your-server-ip:8080/
+   - Admin Panel: http://your-server-ip:8080/ (login required)
    - API: http://your-server-ip:8001/api/
 
 ### Option 2: Manual Installation (Ubuntu)
