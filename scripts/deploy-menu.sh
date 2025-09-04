@@ -97,7 +97,7 @@ deploy_app() {
     echo -e "${GREEN}Deployment completed!${NC}"
     echo ""
     echo -e "${BLUE}Your website is now available at:${NC}"
-    echo -e "${GREEN}  Frontend: http://localhost${NC}"
+    echo -e "${GREEN}  Frontend: http://localhost:8080${NC}"
     echo -e "${GREEN}  Backend API: http://localhost:8001${NC}"
     echo -e "${GREEN}  MongoDB: localhost:27017${NC}"
     echo ""
