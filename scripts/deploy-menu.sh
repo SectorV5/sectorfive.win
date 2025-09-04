@@ -16,7 +16,7 @@ ROOT_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 show_header() {
     clear
     echo -e "${BLUE}=================================="
-    echo -e "   Sectorfive Website Manager"
+    echo -e "   Personal Website Manager"
     echo -e "   Docker Deployment System"
     echo -e "==================================${NC}"
     echo ""
