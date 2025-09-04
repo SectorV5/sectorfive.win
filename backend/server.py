@@ -188,8 +188,8 @@ class Settings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     # Basic Settings
     max_file_size: int = 5368709120  # 5GB in bytes
-    site_title: str = "Sectorfive Personal Website"
-    site_email: str = "admin@sectorfive.win"
+    site_title: str = "Personal Website"
+    site_email: str = "admin@yoursite.com"
     contact_cooldown: int = 300  # 5 minutes in seconds
     
     # Appearance
