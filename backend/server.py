@@ -448,10 +448,75 @@ async def delete_page(page_id: str, current_user: str = Depends(get_current_user
 
 # Blog endpoints
 @api_router.get("/blog", response_model=List[BlogPost])
-async def get_blog_posts(request: Request):
+async def get_blog_posts(
+    request: Request,
+    page: int = 1,
+    limit: int = 10,
+    tag: Optional[str] = None,
+    author: Optional[str] = None,
+    published_only: bool = True
+):
     await track_visit(request, "/blog")
-    posts = await db.blog_posts.find().sort("created_at", -1).to_list(length=None)
+    query = {}
+    if published_only:
+        query["published"] = True
+    if tag:
+        query["tags"] = tag
+    if author:
+        query["author"] = {"$regex": author, "$options": "i"}
+    
+    skip = (page - 1) * limit
+    posts = await db.blog_posts.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
     return [BlogPost(**post) for post in posts]
+
+@api_router.post("/blog/search")
+async def search_blog_posts(search_request: BlogSearchRequest):
+    query = await build_blog_search_query(search_request)
+    
+    # Get total count
+    total = await db.blog_posts.count_documents(query)
+    
+    # Get paginated results
+    skip = (search_request.page - 1) * search_request.limit
+    posts = await db.blog_posts.find(query).sort("created_at", -1).skip(skip).limit(search_request.limit).to_list(length=search_request.limit)
+    
+    # Process results with highlighting
+    results = []
+    for post in posts:
+        blog_post = BlogPost(**post)
+        if search_request.query:
+            blog_post.title = highlight_search_terms(blog_post.title, search_request.query)
+            blog_post.excerpt = highlight_search_terms(blog_post.excerpt or "", search_request.query)
+        results.append(blog_post)
+    
+    return {
+        "posts": results,
+        "pagination": {
+            "current_page": search_request.page,
+            "total_pages": (total + search_request.limit - 1) // search_request.limit,
+            "total_results": total,
+            "per_page": search_request.limit
+        }
+    }
+
+@api_router.get("/blog/tags")
+async def get_blog_tags():
+    """Get all unique tags from blog posts"""
+    pipeline = [
+        {"$match": {"published": True}},
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$project": {"tag": "$_id", "count": 1, "_id": 0}}
+    ]
+    tags = await db.blog_posts.aggregate(pipeline).to_list(length=None)
+    return tags
+
+@api_router.get("/blog/authors")
+async def get_blog_authors():
+    """Get all unique authors from blog posts"""
+    authors = await db.blog_posts.distinct("author", {"published": True})
+    return authors
 
 @api_router.get("/blog/{slug}")
 async def get_blog_post(slug: str, request: Request):
@@ -466,15 +531,44 @@ async def create_blog_post(post_data: BlogPostCreate, current_user: str = Depend
     existing = await db.blog_posts.find_one({"slug": post_data.slug})
     if existing:
         raise HTTPException(status_code=400, detail="Blog post with this slug already exists")
-    post = BlogPost(title=post_data.title, slug=post_data.slug, content=post_data.content)
+    
+    # Auto-generate excerpt if not provided
+    excerpt = post_data.excerpt
+    if not excerpt:
+        settings = await db.settings.find_one() or {}
+        excerpt_length = settings.get("auto_excerpt_length", 200)
+        excerpt = extract_excerpt(post_data.content, excerpt_length)
+    
+    post = BlogPost(
+        title=post_data.title,
+        slug=post_data.slug,
+        content=post_data.content,
+        excerpt=excerpt,
+        tags=post_data.tags,
+        author=post_data.author,
+        featured_image=post_data.featured_image,
+        published=post_data.published
+    )
     await db.blog_posts.insert_one(post.dict())
     return post
 
 @api_router.put("/blog/{post_id}")
 async def update_blog_post(post_id: str, post_data: BlogPostUpdate, current_user: str = Depends(get_current_user)):
+    # Auto-generate excerpt if not provided
+    excerpt = post_data.excerpt
+    if not excerpt:
+        settings = await db.settings.find_one() or {}
+        excerpt_length = settings.get("auto_excerpt_length", 200)
+        excerpt = extract_excerpt(post_data.content, excerpt_length)
+    
     update_data = {
         "title": post_data.title,
         "content": post_data.content,
+        "excerpt": excerpt,
+        "tags": post_data.tags,
+        "author": post_data.author,
+        "featured_image": post_data.featured_image,
+        "published": post_data.published,
         "updated_at": datetime.now(timezone.utc)
     }
     result = await db.blog_posts.update_one({"id": post_id}, {"$set": update_data})
