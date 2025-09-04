@@ -1,45 +1,87 @@
-# Sectorfive.win Retro Personal Website
+# sectorfive.win — Retro Personal Website
 
-A retro-styled personal website with admin dashboard, CMS (pages + blog), file uploads, analytics, contact form, and customizable background. Built with FastAPI + MongoDB backend and React frontend.
+Full-stack app: FastAPI + MongoDB + React, with retro UI, pages/blog CMS, file uploads, analytics, contact form, and customizable background.
 
-## What changed in this update
+Repository: https://github.com/SectorV5/sectorfive.win
 
-- Replaced TinyMCE (requires API key) with React Quill (Quill) which is open-source (MIT) and works well on older browsers supported by React 18
-- Removed bracketed emoji fallback labels like `[SEND]` so buttons/labels are clean
-- Added Reply button in Admin > Contacts that opens default mail app (mailto:) with recipient email, subject, and original message prefilled
-- Contact messages were already stored; Admin can list, search, paginate, and delete. Now Quick Stats also includes counts for Pages, Posts, and Messages
-- Window title color made black for visibility on gray backgrounds
-- Background customization added under Settings: Default CSS (current), Solid Color, CSS Gradient, or Image (URL or upload). If not set, the original gradient remains
-- Implemented public settings endpoint so background applies to public pages without login
-- Headings and content styles tuned to be more distinct and readable
+Highlights
+- Open-source editor (Quill) — no API keys, GPLv3-compatible
+- Admin dashboard with Pages, Blog, Analytics, Contacts, Settings
+- Contact messages stored, Reply opens default mail app
+- Background customization: default, color, gradient, or image
+- First-time admin credential change flow for security
 
-## Tech stack
-- Backend: FastAPI, MongoDB (motor), JWT auth
-- Frontend: React 18, React Router, Axios, React Quill editor
+Quick start on Ubuntu (recommended: Docker Compose)
+1) Install Docker + Compose plugin
+- curl -fsSL https://raw.githubusercontent.com/SectorV5/sectorfive.win/main/scripts/ubuntu-install-docker.sh -o ubuntu-install-docker.sh
+- bash ubuntu-install-docker.sh
+- Log out and back in (if needed) so your user can run docker without sudo
 
-## Environment
-- Frontend uses REACT_APP_BACKEND_URL from frontend/.env
-- Backend connects to Mongo using MONGO_URL from backend/.env
-- Backend runs at 0.0.0.0:8001 (managed by supervisor)
+2) Clone and run
+- git clone https://github.com/SectorV5/sectorfive.win.git
+- cd sectorfive.win
+- bash scripts/run_compose.sh
 
-## API additions
-- GET /api/public-settings: Returns site_title and background settings for public use
-- PUT /api/settings now accepts optional fields: background_type, background_value, background_image_url
+That’s it. Services
+- Frontend: http://YOUR_SERVER_IP/ (served by nginx)
+- Backend: http://YOUR_SERVER_IP:8001/api
+- MongoDB: localhost:27017 (internal by compose)
 
-## Background options
-- default: keeps current CSS gradient background
-- color: set background_value to a color (e.g., #112233 or "teal")
-- gradient: set background_value to a complete CSS gradient (e.g., `linear-gradient(135deg, #245edc, #1a4298)`)
-- image: use background_image_url, or upload via Admin > Settings (uses /api/upload), which fills the URL automatically
+Persistent data
+- MongoDB data is persisted in the docker volume mongo_data
+- Uploaded files are kept inside backend image’s uploads folder while running. To persist uploads across rebuilds, map a host volume to backend at ./backend/uploads via docker-compose (optional):
 
-## Compatibility
-- Designed to work on modern and slightly older browsers supported by React 18 (e.g., Chrome 80+, Firefox 78 ESR, Safari 12+). CSS includes fallbacks for older flexbox implementations.
+  volumes:
+    - ./backend/uploads:/app/uploads
 
-## Development
-- Install frontend deps: yarn
-- Install backend deps: pip install -r backend/requirements.txt
-- Restart services after dependency changes: `sudo supervisorctl restart all`
+Production tuning
+- Set a real email in Settings for contact messages
+- Configure a domain and TLS termination with Caddy/Nginx/Traefik. The frontend container listens on port 80
+- For single-domain setups, frontend proxies /api to backend automatically
 
-## Default Admin
-- Username: Sectorfive
-- Password: KamenkoTV258!
+Run on boot
+- Docker’s restart policies are already set to unless-stopped so the app auto-starts after reboot.
+- Ensure Docker is enabled: sudo systemctl enable docker
+
+First-time admin login and credential change
+- Default admin credentials: username admin, password admin
+- After login, you will be prompted to change username and password. You cannot proceed to the admin dashboard without doing this in the UI
+
+Manual (non-Docker) setup (optional)
+- Backend: Python 3.11+, pip install -r backend/requirements.txt, set env vars MONGO_URL and DB_NAME, run: python -m uvicorn server:app --host 0.0.0.0 --port 8001
+- MongoDB: Install and run locally
+- Frontend: Node 18+, yarn install, REACT_APP_BACKEND_URL should point to your backend (or leave unset and it will use same-origin /api), yarn build and serve via nginx or use yarn start for dev
+
+Environment variables
+- Backend: MONGO_URL (mongo connection), DB_NAME (database name), CORS_ORIGINS (optional)
+- Frontend build arg: REACT_APP_BACKEND_URL (optional, for same-origin leave empty and nginx will proxy /api)
+
+Security notes
+- Change admin/admin immediately at first login (the UI forces it)
+- Use HTTPS in production
+- Keep Docker and host packages updated
+
+Troubleshooting
+- docker compose logs -f backend
+- docker compose logs -f frontend
+- If port 80 is busy, change the port mapping in docker-compose.yml under frontend
+
+Default routes
+- Public:
+  - GET /api/page/home
+  - GET /api/blog, GET /api/blog/:slug
+  - POST /api/contact
+  - GET /api/public-settings
+- Admin (require login):
+  - POST /api/login, GET /api/me
+  - POST /api/change-credentials (first-time change)
+  - POST /api/change-password
+  - Pages: /api/pages CRUD
+  - Blog: /api/blog CRUD
+  - Analytics: /api/analytics
+  - Uploads: /api/upload, GET /api/uploads/:filename
+
+Default admin
+- Username: admin
+- Password: admin
+- First login will require changing both username and password
