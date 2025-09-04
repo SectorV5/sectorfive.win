@@ -233,6 +233,9 @@
         - working: true
           agent: "testing"
           comment: "Updated settings system tested with new background fields (background_type, background_value, background_image_url). Public settings endpoint (/api/public-settings) working correctly without authentication. All settings persistence and retrieval working properly"
+        - working: true
+          agent: "testing"
+          comment: "Regression test passed: Settings management working correctly after admin credential changes. Both admin and public settings endpoints functional with proper background field support."
 
   - task: "Public Settings Endpoint"
     implemented: true
