@@ -293,13 +293,192 @@ const BlogPost = () => {
   );
 };
 
-const Gallery = () => (
-  <div className="page-container">
-    <RetroWindow title="🖼️ Image Gallery" className="main-content">
-      <p>Image gallery coming soon! This will showcase photos and media.</p>
-    </RetroWindow>
-  </div>
-);
+const Gallery = () => {
+  const [galleryData, setGalleryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selectedTags, setSelectedTags] = useState('');
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [allTags, setAllTags] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  
+  useEffect(() => {
+    fetchImages();
+    fetchTags();
+  }, [search, selectedTags, featuredOnly, page]);
+  
+  const fetchImages = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '12'
+      });
+      if (search) params.append('search', search);
+      if (selectedTags) params.append('tags', selectedTags);
+      if (featuredOnly) params.append('featured_only', 'true');
+      
+      const response = await axios.get(`${API}/gallery?${params}`);
+      setGalleryData(response.data);
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+    } finally { 
+      setLoading(false); 
+    }
+  };
+  
+  const fetchTags = async () => {
+    try {
+      const response = await axios.get(`${API}/gallery/tags`);
+      setAllTags(response.data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+  
+  if (loading) return <div className="loading">Loading gallery...</div>;
+  
+  return (
+    <div className="page-container">
+      <RetroWindow title="🖼️ Image Gallery" className="main-content">
+        {/* Search and Filter Controls */}
+        <div className="gallery-controls">
+          <div className="search-section">
+            <input 
+              type="text" 
+              placeholder="Search images..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              className="retro-input" 
+            />
+            <input 
+              type="text" 
+              placeholder="Filter by tags (comma-separated)..." 
+              value={selectedTags} 
+              onChange={(e) => setSelectedTags(e.target.value)} 
+              className="retro-input" 
+            />
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={featuredOnly} 
+                onChange={(e) => setFeaturedOnly(e.target.checked)} 
+              />
+              Featured images only
+            </label>
+          </div>
+          
+          {/* Tag Cloud */}
+          {allTags.length > 0 && (
+            <div className="tag-cloud">
+              <h4>Popular Tags:</h4>
+              <div className="tags">
+                {allTags.slice(0, 10).map(tag => (
+                  <span 
+                    key={tag.name} 
+                    className={`tag ${selectedTags.includes(tag.name) ? 'active' : ''}`}
+                    onClick={() => {
+                      if (selectedTags.includes(tag.name)) {
+                        setSelectedTags(selectedTags.replace(tag.name, '').replace(/,\s*,/g, ',').replace(/^,|,$/g, ''));
+                      } else {
+                        setSelectedTags(selectedTags ? `${selectedTags}, ${tag.name}` : tag.name);
+                      }
+                    }}
+                  >
+                    {tag.name} ({tag.count})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {galleryData && galleryData.images.length > 0 ? (
+          <>
+            <div className="gallery-grid">
+              {galleryData.images.map(image => (
+                <div key={image.id} className="gallery-item" onClick={() => setSelectedImage(image)}>
+                  <div className="image-container">
+                    <img src={image.file_url} alt={image.title} loading="lazy" />
+                    {image.is_featured && <div className="featured-badge">⭐ Featured</div>}
+                  </div>
+                  <div className="image-info">
+                    <h4>{image.title}</h4>
+                    {image.description && <p className="description">{image.description}</p>}
+                    {image.tags && image.tags.length > 0 && (
+                      <div className="image-tags">
+                        {image.tags.map(tag => (
+                          <span key={tag} className="tag" onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTags(tag);
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="image-meta">
+                      📅 {new Date(image.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {galleryData.pagination && galleryData.pagination.total_pages > 1 && (
+              <div className="pagination">
+                <button 
+                  onClick={() => setPage(Math.max(1, page - 1))} 
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="current-page">
+                  Page {galleryData.pagination.current_page} of {galleryData.pagination.total_pages}
+                </span>
+                <button 
+                  onClick={() => setPage(Math.min(galleryData.pagination.total_pages, page + 1))} 
+                  disabled={page === galleryData.pagination.total_pages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="empty-gallery">
+            <p>No images found in the gallery. {search || selectedTags ? 'Try adjusting your search or filters.' : 'Check back soon!'}</p>
+          </div>
+        )}
+        
+        {/* Image Modal */}
+        {selectedImage && (
+          <div className="modal-overlay" onClick={() => setSelectedImage(null)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setSelectedImage(null)}>×</button>
+              <img src={selectedImage.file_url} alt={selectedImage.title} />
+              <div className="modal-info">
+                <h3>{selectedImage.title}</h3>
+                {selectedImage.description && <p>{selectedImage.description}</p>}
+                {selectedImage.tags && selectedImage.tags.length > 0 && (
+                  <div className="modal-tags">
+                    {selectedImage.tags.map(tag => (
+                      <span key={tag} className="tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="modal-meta">
+                  📅 {new Date(selectedImage.created_at).toLocaleDateString()}
+                  {selectedImage.uploaded_by && <span> • 👤 {selectedImage.uploaded_by}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </RetroWindow>
+    </div>
+  );
+};
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
