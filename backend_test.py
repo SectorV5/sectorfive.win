@@ -1337,10 +1337,15 @@ This automated testing approach helps catch issues early and ensures a robust ba
         self.test_authentication_system()
         self.test_content_management()
         self.test_blog_system()
+        self.test_enhanced_blog_system()
+        self.test_advanced_blog_search()
+        self.test_blog_tags_and_authors()
         self.test_file_upload_system()
         self.test_analytics_system()
         self.test_contact_form()
         self.test_settings_management()
+        self.test_extended_settings()
+        self.test_seo_endpoints()
         
         # Generate summary
         self.generate_summary()
