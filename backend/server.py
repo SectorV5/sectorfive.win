@@ -685,6 +685,212 @@ async def reset_user_password(user_id: str, new_password: str = Form(...), curre
     
     return {"message": "Password reset successfully"}
 
+# Backup and Restore endpoints
+@api_router.post("/backup")
+async def create_backup(current_user: str = Depends(get_current_user)):
+    # Only owners can create backups
+    user = await db.users.find_one({"username": current_user})
+    if not user or not user.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Only site owner can create backups")
+    
+    import json
+    import shutil
+    from pathlib import Path
+    
+    backup_id = str(uuid.uuid4())[:8]
+    backup_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup_name = f"backup_{backup_timestamp}_{backup_id}"
+    
+    # Create backup directory
+    backup_dir = Path("/app/backups") / backup_name
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Backup collections
+        collections = ["users", "pages", "blog_posts", "settings", "analytics", "contact_messages"]
+        backup_data = {
+            "metadata": {
+                "backup_id": backup_id,
+                "timestamp": backup_timestamp,
+                "created_by": current_user,
+                "version": "1.0"
+            },
+            "data": {}
+        }
+        
+        for collection_name in collections:
+            collection = getattr(db, collection_name)
+            items = []
+            async for item in collection.find({}):
+                # Convert datetime objects to strings for JSON serialization
+                for key, value in item.items():
+                    if isinstance(value, datetime):
+                        item[key] = value.isoformat()
+                items.append(item)
+            backup_data["data"][collection_name] = items
+        
+        # Save database backup
+        with open(backup_dir / "database.json", "w") as f:
+            json.dump(backup_data, f, indent=2, default=str)
+        
+        # Backup uploaded files
+        uploads_dir = Path("/app/uploads")
+        if uploads_dir.exists():
+            shutil.copytree(uploads_dir, backup_dir / "uploads", dirs_exist_ok=True)
+        
+        # Create backup info file
+        info = {
+            "name": backup_name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user,
+            "collections": len(collections),
+            "total_items": sum(len(backup_data["data"][col]) for col in collections)
+        }
+        
+        with open(backup_dir / "info.json", "w") as f:
+            json.dump(info, f, indent=2)
+        
+        return {
+            "message": "Backup created successfully",
+            "backup_name": backup_name,
+            "backup_id": backup_id,
+            "items_backed_up": info["total_items"]
+        }
+        
+    except Exception as e:
+        # Clean up on error
+        if backup_dir.exists():
+            shutil.rmtree(backup_dir)
+        raise HTTPException(status_code=500, detail=f"Backup failed: {str(e)}")
+
+@api_router.get("/backups")
+async def list_backups(current_user: str = Depends(get_current_user)):
+    # Only owners can list backups
+    user = await db.users.find_one({"username": current_user})
+    if not user or not user.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Only site owner can access backups")
+    
+    import json
+    from pathlib import Path
+    
+    backups_dir = Path("/app/backups")
+    if not backups_dir.exists():
+        return {"backups": []}
+    
+    backups = []
+    for backup_dir in backups_dir.iterdir():
+        if backup_dir.is_dir():
+            info_file = backup_dir / "info.json"
+            if info_file.exists():
+                try:
+                    with open(info_file, "r") as f:
+                        info = json.load(f)
+                    
+                    # Add size information
+                    total_size = sum(f.stat().st_size for f in backup_dir.rglob('*') if f.is_file())
+                    info["size_bytes"] = total_size
+                    info["size_mb"] = round(total_size / (1024 * 1024), 2)
+                    
+                    backups.append(info)
+                except:
+                    continue
+    
+    # Sort by creation date (newest first)
+    backups.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    
+    return {"backups": backups}
+
+@api_router.post("/restore/{backup_name}")
+async def restore_backup(backup_name: str, current_user: str = Depends(get_current_user)):
+    # Only owners can restore backups
+    user = await db.users.find_one({"username": current_user})
+    if not user or not user.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Only site owner can restore backups")
+    
+    import json
+    import shutil
+    from pathlib import Path
+    
+    backup_dir = Path("/app/backups") / backup_name
+    if not backup_dir.exists():
+        raise HTTPException(status_code=404, detail="Backup not found")
+    
+    database_file = backup_dir / "database.json"
+    if not database_file.exists():
+        raise HTTPException(status_code=400, detail="Invalid backup: database.json not found")
+    
+    try:
+        # Load backup data
+        with open(database_file, "r") as f:
+            backup_data = json.load(f)
+        
+        # Restore database collections
+        collections_restored = 0
+        for collection_name, items in backup_data["data"].items():
+            if not items:
+                continue
+                
+            collection = getattr(db, collection_name)
+            
+            # Clear existing data
+            await collection.delete_many({})
+            
+            # Convert datetime strings back to datetime objects
+            for item in items:
+                for key, value in item.items():
+                    if isinstance(value, str) and key.endswith(('_at', 'last_login')) and 'T' in value:
+                        try:
+                            # Parse ISO format datetime
+                            item[key] = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                        except:
+                            pass
+            
+            # Insert restored data
+            if items:
+                await collection.insert_many(items)
+                collections_restored += 1
+        
+        # Restore uploaded files
+        uploads_backup = backup_dir / "uploads"
+        uploads_dir = Path("/app/uploads")
+        
+        if uploads_backup.exists():
+            # Remove existing uploads
+            if uploads_dir.exists():
+                shutil.rmtree(uploads_dir)
+            
+            # Copy backup uploads
+            shutil.copytree(uploads_backup, uploads_dir)
+        
+        return {
+            "message": "Backup restored successfully",
+            "collections_restored": collections_restored,
+            "backup_metadata": backup_data.get("metadata", {})
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Restore failed: {str(e)}")
+
+@api_router.delete("/backups/{backup_name}")
+async def delete_backup(backup_name: str, current_user: str = Depends(get_current_user)):
+    # Only owners can delete backups
+    user = await db.users.find_one({"username": current_user})
+    if not user or not user.get("is_owner", False):
+        raise HTTPException(status_code=403, detail="Only site owner can delete backups")
+    
+    import shutil
+    from pathlib import Path
+    
+    backup_dir = Path("/app/backups") / backup_name
+    if not backup_dir.exists():
+        raise HTTPException(status_code=404, detail="Backup not found")
+    
+    try:
+        shutil.rmtree(backup_dir)
+        return {"message": f"Backup '{backup_name}' deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete backup: {str(e)}")
+
 @api_router.post("/change-credentials")
 async def change_credentials(
     old_password: str = Form(...),
