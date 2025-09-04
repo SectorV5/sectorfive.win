@@ -811,3 +811,316 @@ a:focus, button:focus, input:focus, textarea:focus {
     -ms-flex-align: center;
     align-items: center;
 }
+
+/* Gallery Styles */
+.gallery-controls {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%);
+    border: 2px inset #f0f0f0;
+    border-radius: 4px;
+}
+
+.gallery-controls .search-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.gallery-controls .search-section input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.gallery-item {
+    background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+    border: 2px outset #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+
+.gallery-item:hover {
+    border: 2px inset #f0f0f0;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+}
+
+.gallery-item .image-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.gallery-item .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.featured-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(180deg, #ffd700 0%, #ffcc00 100%);
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid #ffaa00;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.gallery-item .image-info {
+    padding: 12px;
+}
+
+.gallery-item .image-info h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #003d6b;
+}
+
+.gallery-item .image-info .description {
+    font-size: 11px;
+    color: #555;
+    margin: 6px 0;
+    line-height: 1.4;
+}
+
+.gallery-item .image-tags {
+    margin: 8px 0;
+}
+
+.gallery-item .image-meta {
+    font-size: 10px;
+    color: #666;
+    margin-top: 8px;
+}
+
+.empty-gallery {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.modal-content {
+    background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%);
+    border: 2px outset #f0f0f0;
+    border-radius: 8px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    cursor: default;
+    position: relative;
+    box-shadow: 8px 8px 24px rgba(0,0,0,0.5);
+}
+
+.modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(180deg, #ff6666 0%, #ff4444 100%);
+    color: white;
+    border: 2px outset #ff6666;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.modal-close:hover {
+    border: 2px inset #ff6666;
+    background: linear-gradient(180deg, #ff4444 0%, #ff2222 100%);
+}
+
+.modal-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.modal-info {
+    padding: 15px;
+}
+
+.modal-info h3 {
+    margin: 0 0 10px 0;
+    color: #003d6b;
+}
+
+.modal-info p {
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.modal-tags {
+    margin: 10px 0;
+}
+
+.modal-meta {
+    font-size: 11px;
+    color: #666;
+    margin-top: 12px;
+}
+
+/* Admin Gallery Styles */
+.admin-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.admin-gallery-item {
+    background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+    border: 2px outset #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+
+.admin-gallery-item .image-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.admin-gallery-item .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.admin-gallery-item .image-info {
+    padding: 12px;
+}
+
+.admin-gallery-item .image-info h5 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #003d6b;
+}
+
+.admin-gallery-item .image-info .description {
+    font-size: 11px;
+    color: #555;
+    margin: 6px 0;
+    line-height: 1.3;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+.admin-gallery-item .admin-controls {
+    margin-top: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.admin-gallery-item .admin-controls .retro-button {
+    font-size: 10px;
+    padding: 4px 8px;
+}
+
+.admin-subsection {
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%);
+    border: 2px inset #f0f0f0;
+    border-radius: 4px;
+}
+
+.admin-subsection h4 {
+    margin: 0 0 15px 0;
+    color: #003d6b;
+    font-size: 14px;
+}
+
+.upload-form .form-group {
+    margin-bottom: 12px;
+}
+
+.upload-form .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Responsive adjustments for gallery */
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .admin-gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .gallery-controls .search-section {
+        flex-direction: column;
+    }
+    
+    .gallery-controls .search-section input {
+        min-width: auto;
+    }
+    
+    .modal-content {
+        max-width: 95%;
+        max-height: 95%;
+    }
+}
