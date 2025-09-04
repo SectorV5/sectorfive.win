@@ -198,7 +198,7 @@ backup_data() {
     
     # Backup MongoDB
     echo -e "${YELLOW}Backing up database...${NC}"
-    docker-compose exec -T mongo mongodump --db sectorfive_db --archive > "$BACKUP_DIR/database.archive"
+    docker-compose exec -T mongo mongodump --db personal_website_db --archive > "$BACKUP_DIR/database.archive"
     
     # Backup uploaded files
     echo -e "${YELLOW}Backing up uploaded files...${NC}"
