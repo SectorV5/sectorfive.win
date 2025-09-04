@@ -898,6 +898,16 @@ async def get_sitemap():
 async def startup_event():
     await initialize_data()
 
+# Health check endpoint
+@api_router.get("/health")
+async def health_check():
+    try:
+        # Check database connection
+        await db.command("ping")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
 app.include_router(api_router)
 
 app.add_middleware(
