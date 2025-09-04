@@ -224,6 +224,71 @@ def get_country_from_ip(ip: str) -> str:
     # Simple placeholder
     return "Unknown"
 
+def extract_excerpt(content: str, length: int = 200) -> str:
+    """Extract plain text excerpt from HTML content"""
+    import re
+    # Remove HTML tags
+    plain_text = re.sub('<[^<]+?>', '', content)
+    # Clean whitespace
+    plain_text = ' '.join(plain_text.split())
+    # Truncate to desired length
+    if len(plain_text) <= length:
+        return plain_text
+    return plain_text[:length].rsplit(' ', 1)[0] + '...'
+
+def highlight_search_terms(text: str, query: str) -> str:
+    """Highlight search terms in text"""
+    if not query or not text:
+        return text
+    import re
+    words = query.split()
+    for word in words:
+        pattern = re.compile(re.escape(word), re.IGNORECASE)
+        text = pattern.sub(f'<mark>{word}</mark>', text)
+    return text
+
+async def build_blog_search_query(search_request: BlogSearchRequest):
+    """Build MongoDB query for blog search"""
+    query = {}
+    
+    # Published filter
+    if search_request.published_only:
+        query["published"] = True
+    
+    # Text search
+    search_conditions = []
+    if search_request.query:
+        search_term = search_request.query
+        search_conditions.extend([
+            {"title": {"$regex": search_term, "$options": "i"}},
+            {"content": {"$regex": search_term, "$options": "i"}},
+            {"excerpt": {"$regex": search_term, "$options": "i"}},
+            {"tags": {"$regex": search_term, "$options": "i"}}
+        ])
+    
+    # Tags filter
+    if search_request.tags:
+        search_conditions.append({"tags": {"$in": search_request.tags}})
+    
+    # Author filter
+    if search_request.author:
+        search_conditions.append({"author": {"$regex": search_request.author, "$options": "i"}})
+    
+    # Date range filter
+    date_conditions = []
+    if search_request.date_from:
+        date_conditions.append({"created_at": {"$gte": search_request.date_from}})
+    if search_request.date_to:
+        date_conditions.append({"created_at": {"$lte": search_request.date_to}})
+    
+    # Combine all conditions
+    if search_conditions:
+        query["$or"] = search_conditions
+    if date_conditions:
+        query.update({k: v for d in date_conditions for k, v in d.items()})
+    
+    return query
+
 async def check_rate_limit(ip: str, endpoint: str, limit_seconds: int = 300):
     key = f"{ip}:{endpoint}"
     current_time = time.time()
