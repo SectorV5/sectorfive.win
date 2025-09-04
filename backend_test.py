@@ -159,7 +159,7 @@ class BackendTester:
                 "slug": "test-about",
                 "content": "This is a test about page created during backend testing. It contains information about the testing process and validates the page creation functionality."
             }
-            response = requests.post(f"{self.base_url}/pages", data=page_data, headers=self.auth_headers)
+            response = requests.post(f"{self.base_url}/pages", json=page_data, headers=self.auth_headers)
             
             if response.status_code == 200:
                 created_page = response.json()
@@ -180,7 +180,7 @@ class BackendTester:
                     "title": "Updated Test About Page",
                     "content": "This page has been updated during backend testing to verify the update functionality works correctly."
                 }
-                response = requests.put(f"{self.base_url}/pages/{created_page_id}", data=update_data, headers=self.auth_headers)
+                response = requests.put(f"{self.base_url}/pages/{created_page_id}", json=update_data, headers=self.auth_headers)
                 
                 if response.status_code == 200:
                     self.log_result("Content Management - Update Page", True, "Successfully updated page")
