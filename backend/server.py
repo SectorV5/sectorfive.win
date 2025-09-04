@@ -75,6 +75,11 @@ class BlogPost(BaseModel):
     title: str
     slug: str
     content: str
+    excerpt: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    author: str = "Admin"
+    featured_image: Optional[str] = None
+    published: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -82,10 +87,30 @@ class BlogPostCreate(BaseModel):
     title: str
     slug: str
     content: str
+    excerpt: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    author: Optional[str] = "Admin"
+    featured_image: Optional[str] = None
+    published: bool = True
 
 class BlogPostUpdate(BaseModel):
     title: str
     content: str
+    excerpt: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    author: Optional[str] = "Admin"
+    featured_image: Optional[str] = None
+    published: bool = True
+
+class BlogSearchRequest(BaseModel):
+    query: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    author: Optional[str] = None
+    date_from: Optional[datetime] = None
+    date_to: Optional[datetime] = None
+    published_only: bool = True
+    page: int = 1
+    limit: int = 10
 
 class Analytics(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
