@@ -208,7 +208,7 @@ backup_data() {
     cat > "$BACKUP_DIR/backup_info.txt" << EOF
 Personal Website Backup
 Created: $(date)
-Database: sectorfive_db
+Database: personal_website_db
 Files: backend/uploads/
 EOF
     
