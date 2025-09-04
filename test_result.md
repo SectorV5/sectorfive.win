@@ -119,6 +119,9 @@
         - working: true
           agent: "testing"
           comment: "Authentication system fully tested: login (valid/invalid), token validation, password change validation all working correctly"
+        - working: true
+          agent: "testing"
+          comment: "Admin onboarding flow fully tested and working: 1) Startup creates admin/admin with must_change_password=true 2) Login with admin/admin returns token and must_change_password=true 3) /api/me returns must_change_password=true 4) /api/change-credentials successfully changes to newadmin/newpass and sets must_change_password=false 5) Login with newadmin/newpass works with must_change_password=false 6) Old admin/admin credentials properly rejected. All authentication flows working correctly."
   
   - task: "Content Management (Pages)"
     implemented: true
