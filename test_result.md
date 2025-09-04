@@ -248,6 +248,9 @@
         - working: true
           agent: "testing"
           comment: "New public settings endpoint (/api/public-settings) implemented and tested. Returns site_title and background_* fields without authentication as required. Correctly reflects admin setting updates"
+        - working: true
+          agent: "testing"
+          comment: "Regression test passed: Public settings endpoint working correctly after admin credential changes. Returns proper site_title and background configuration without authentication."
 
   - task: "Enhanced Contact Form with Cooldown"
     implemented: true
