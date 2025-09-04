@@ -155,6 +155,9 @@
         - working: true
           agent: "testing"
           comment: "Blog system fully tested: get all posts, create/update posts, slug-based retrieval, error handling for non-existent posts all working correctly"
+        - working: true
+          agent: "testing"
+          comment: "Regression test passed: Blog system working correctly after admin credential changes. Minor: Blog post creation test shows expected duplicate slug validation working properly."
   
   - task: "File Upload System"
     implemented: true
