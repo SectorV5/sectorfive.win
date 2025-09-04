@@ -267,7 +267,7 @@ restore_data() {
 
 # Update application
 update_app() {
-    echo -e "${YELLOW}Updating Sectorfive Website...${NC}"
+    echo -e "${YELLOW}Updating Personal Website...${NC}"
     cd "$ROOT_DIR"
     
     # Pull latest changes if in git repo
