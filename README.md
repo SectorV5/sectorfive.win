@@ -1,6 +1,8 @@
-# Sectorfive Personal Website
+# Personal Website Template
 
-A modern, retro-styled personal website built with React, FastAPI, and MongoDB. Features a complete content management system, advanced blog functionality with search and tagging, file uploads, analytics, and extensive admin configuration options.
+A modern, retro-styled personal website template built with React, FastAPI, and MongoDB. Features a complete content management system, advanced blog functionality with search and tagging, image gallery, file uploads, analytics, and extensive admin configuration options.
+
+Inspired by Windows XP/Vista/7 Aero design with a nostalgic feel and modern functionality.
 
 ## 📋 Table of Contents
 
