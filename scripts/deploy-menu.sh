@@ -118,7 +118,7 @@ deploy_app() {
         echo -e "${RED}✗ Backend may not be ready yet${NC}"
     fi
     
-    if curl -f http://localhost >/dev/null 2>&1; then
+    if curl -f http://localhost:8080 >/dev/null 2>&1; then
         echo -e "${GREEN}✓ Frontend is running${NC}"
     else
         echo -e "${RED}✗ Frontend may not be ready yet${NC}"
