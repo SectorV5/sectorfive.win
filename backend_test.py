@@ -460,7 +460,7 @@ This automated testing approach helps catch issues early and ensures a robust ba
                 "email": "alex.johnson@example.com",
                 "message": "Hello! I'm reaching out to test the contact form functionality. This message is part of the automated backend testing process. The form seems to be working well!"
             }
-            response = requests.post(f"{self.base_url}/contact", data=contact_data)
+            response = requests.post(f"{self.base_url}/contact", json=contact_data)
             
             if response.status_code == 200:
                 result = response.json()
@@ -480,7 +480,7 @@ This automated testing approach helps catch issues early and ensures a robust ba
                 "email": "alex.johnson@example.com", 
                 "message": "This is an immediate second message to test cooldown."
             }
-            response = requests.post(f"{self.base_url}/contact", data=contact_data_immediate)
+            response = requests.post(f"{self.base_url}/contact", json=contact_data_immediate)
             
             if response.status_code == 429:
                 self.log_result("Contact Form - Cooldown Protection", True, "Cooldown protection is working - second message blocked")
