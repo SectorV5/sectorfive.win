@@ -48,7 +48,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8080:80"
     networks:
       - website_network
       
