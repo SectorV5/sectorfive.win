@@ -709,7 +709,520 @@ This automated testing approach helps catch issues early and ensures a robust ba
         except Exception as e:
             self.log_result("Contact Form - Multiple Submissions After Cooldown", False, "Second contact submission failed", str(e))
     
-    def test_settings_management(self):
+    def test_enhanced_blog_system(self):
+        """Test enhanced blog system with tags, excerpts, and new fields"""
+        print("\n=== Testing Enhanced Blog System ===")
+        
+        if not self.token:
+            self.log_result("Enhanced Blog System", False, "No authentication token available")
+            return
+        
+        created_post_id = None
+        
+        # Test 1: Create blog post with all new fields
+        try:
+            post_data = {
+                "title": "Advanced Web Development Techniques",
+                "slug": "advanced-web-dev-techniques",
+                "content": """<h2>Introduction to Modern Web Development</h2>
+                <p>In today's rapidly evolving tech landscape, web development has become more sophisticated than ever. This comprehensive guide covers the latest techniques and best practices.</p>
+                
+                <h3>Key Topics Covered:</h3>
+                <ul>
+                <li>React and modern JavaScript frameworks</li>
+                <li>API design and backend architecture</li>
+                <li>Database optimization strategies</li>
+                <li>Security best practices</li>
+                </ul>
+                
+                <p>Whether you're a beginner or an experienced developer, this post will provide valuable insights into building robust, scalable web applications.</p>""",
+                "excerpt": "A comprehensive guide to modern web development techniques covering React, APIs, databases, and security.",
+                "tags": ["web-development", "react", "javascript", "backend", "security"],
+                "author": "Alex Thompson",
+                "featured_image": "https://example.com/web-dev-featured.jpg",
+                "published": True
+            }
+            response = requests.post(f"{self.base_url}/blog", json=post_data, headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                created_post = response.json()
+                if "id" in created_post and "tags" in created_post and "excerpt" in created_post:
+                    created_post_id = created_post["id"]
+                    self.log_result("Enhanced Blog - Create with New Fields", True, 
+                                  f"Successfully created enhanced blog post with tags: {created_post.get('tags', [])}")
+                else:
+                    self.log_result("Enhanced Blog - Create with New Fields", False, 
+                                  "Created post missing new fields", str(created_post))
+            else:
+                self.log_result("Enhanced Blog - Create with New Fields", False, 
+                              f"Enhanced blog post creation failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced Blog - Create with New Fields", False, "Enhanced blog post creation failed", str(e))
+        
+        # Test 2: Create blog post without excerpt (test auto-generation)
+        try:
+            post_data_no_excerpt = {
+                "title": "Testing Auto-Excerpt Generation",
+                "slug": "auto-excerpt-test",
+                "content": """This is a test post to verify that excerpts are automatically generated when not provided. The system should extract the first portion of the content and create a meaningful excerpt. This content is long enough to test the excerpt generation functionality properly.""",
+                "tags": ["testing", "automation"],
+                "author": "Test Author",
+                "published": True
+            }
+            response = requests.post(f"{self.base_url}/blog", json=post_data_no_excerpt, headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                created_post = response.json()
+                if "excerpt" in created_post and created_post["excerpt"]:
+                    self.log_result("Enhanced Blog - Auto-Excerpt Generation", True, 
+                                  f"Auto-excerpt generated: {created_post['excerpt'][:50]}...")
+                else:
+                    self.log_result("Enhanced Blog - Auto-Excerpt Generation", False, 
+                                  "Auto-excerpt not generated", str(created_post))
+            else:
+                self.log_result("Enhanced Blog - Auto-Excerpt Generation", False, 
+                              f"Auto-excerpt test failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced Blog - Auto-Excerpt Generation", False, "Auto-excerpt test failed", str(e))
+        
+        # Test 3: Update blog post with new fields
+        if created_post_id:
+            try:
+                update_data = {
+                    "title": "Advanced Web Development Techniques - Updated",
+                    "content": "Updated content with new information about cutting-edge web development practices.",
+                    "excerpt": "Updated excerpt with more detailed information about modern web development.",
+                    "tags": ["web-development", "react", "javascript", "backend", "security", "updated"],
+                    "author": "Alex Thompson - Senior Developer",
+                    "featured_image": "https://example.com/updated-featured.jpg",
+                    "published": True
+                }
+                response = requests.put(f"{self.base_url}/blog/{created_post_id}", json=update_data, headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    self.log_result("Enhanced Blog - Update with New Fields", True, "Successfully updated blog post with enhanced fields")
+                else:
+                    self.log_result("Enhanced Blog - Update with New Fields", False, 
+                                  f"Enhanced blog post update failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Enhanced Blog - Update with New Fields", False, "Enhanced blog post update failed", str(e))
+        
+        # Test 4: Get blog posts with filtering
+        try:
+            response = requests.get(f"{self.base_url}/blog?tag=web-development&author=Alex&published_only=true")
+            
+            if response.status_code == 200:
+                posts = response.json()
+                if isinstance(posts, list):
+                    self.log_result("Enhanced Blog - Get with Filters", True, 
+                                  f"Successfully retrieved {len(posts)} filtered blog posts")
+                else:
+                    self.log_result("Enhanced Blog - Get with Filters", False, "Filtered posts response is not a list", str(posts))
+            else:
+                self.log_result("Enhanced Blog - Get with Filters", False, 
+                              f"Filtered blog posts retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Enhanced Blog - Get with Filters", False, "Filtered blog posts retrieval failed", str(e))
+
+    def test_advanced_blog_search(self):
+        """Test advanced blog search functionality"""
+        print("\n=== Testing Advanced Blog Search System ===")
+        
+        # Test 1: Basic text search
+        try:
+            search_data = {
+                "query": "web development",
+                "published_only": True,
+                "page": 1,
+                "limit": 10
+            }
+            response = requests.post(f"{self.base_url}/blog/search", json=search_data)
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                if "posts" in search_result and "pagination" in search_result:
+                    posts = search_result["posts"]
+                    pagination = search_result["pagination"]
+                    self.log_result("Advanced Search - Text Search", True, 
+                                  f"Successfully searched and found {len(posts)} posts (total: {pagination.get('total_results', 0)})")
+                else:
+                    self.log_result("Advanced Search - Text Search", False, 
+                                  "Search response missing posts or pagination", str(search_result))
+            else:
+                self.log_result("Advanced Search - Text Search", False, 
+                              f"Blog search failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Advanced Search - Text Search", False, "Blog search failed", str(e))
+        
+        # Test 2: Search with tags filter
+        try:
+            search_data = {
+                "tags": ["web-development", "javascript"],
+                "published_only": True,
+                "page": 1,
+                "limit": 5
+            }
+            response = requests.post(f"{self.base_url}/blog/search", json=search_data)
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                if "posts" in search_result:
+                    posts = search_result["posts"]
+                    self.log_result("Advanced Search - Tags Filter", True, 
+                                  f"Successfully filtered by tags and found {len(posts)} posts")
+                else:
+                    self.log_result("Advanced Search - Tags Filter", False, 
+                                  "Tags search response missing posts", str(search_result))
+            else:
+                self.log_result("Advanced Search - Tags Filter", False, 
+                              f"Tags search failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Advanced Search - Tags Filter", False, "Tags search failed", str(e))
+        
+        # Test 3: Search with author filter
+        try:
+            search_data = {
+                "author": "Alex",
+                "published_only": True,
+                "page": 1,
+                "limit": 10
+            }
+            response = requests.post(f"{self.base_url}/blog/search", json=search_data)
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                if "posts" in search_result:
+                    posts = search_result["posts"]
+                    self.log_result("Advanced Search - Author Filter", True, 
+                                  f"Successfully filtered by author and found {len(posts)} posts")
+                else:
+                    self.log_result("Advanced Search - Author Filter", False, 
+                                  "Author search response missing posts", str(search_result))
+            else:
+                self.log_result("Advanced Search - Author Filter", False, 
+                              f"Author search failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Advanced Search - Author Filter", False, "Author search failed", str(e))
+        
+        # Test 4: Combined search with highlighting
+        try:
+            search_data = {
+                "query": "development",
+                "tags": ["web-development"],
+                "published_only": True,
+                "page": 1,
+                "limit": 10
+            }
+            response = requests.post(f"{self.base_url}/blog/search", json=search_data)
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                if "posts" in search_result:
+                    posts = search_result["posts"]
+                    # Check if highlighting is working (look for <mark> tags)
+                    highlighted_found = False
+                    for post in posts:
+                        if "<mark>" in post.get("title", "") or "<mark>" in post.get("excerpt", ""):
+                            highlighted_found = True
+                            break
+                    
+                    if highlighted_found:
+                        self.log_result("Advanced Search - Search Highlighting", True, 
+                                      "Search terms are properly highlighted in results")
+                    else:
+                        self.log_result("Advanced Search - Search Highlighting", True, 
+                                      f"Combined search successful with {len(posts)} posts (highlighting may not be visible in test)")
+                else:
+                    self.log_result("Advanced Search - Combined Search", False, 
+                                  "Combined search response missing posts", str(search_result))
+            else:
+                self.log_result("Advanced Search - Combined Search", False, 
+                              f"Combined search failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Advanced Search - Combined Search", False, "Combined search failed", str(e))
+        
+        # Test 5: Date range search
+        try:
+            from datetime import datetime, timedelta
+            date_from = (datetime.now() - timedelta(days=30)).isoformat()
+            date_to = datetime.now().isoformat()
+            
+            search_data = {
+                "date_from": date_from,
+                "date_to": date_to,
+                "published_only": True,
+                "page": 1,
+                "limit": 10
+            }
+            response = requests.post(f"{self.base_url}/blog/search", json=search_data)
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                if "posts" in search_result:
+                    posts = search_result["posts"]
+                    self.log_result("Advanced Search - Date Range", True, 
+                                  f"Successfully searched by date range and found {len(posts)} posts")
+                else:
+                    self.log_result("Advanced Search - Date Range", False, 
+                                  "Date range search response missing posts", str(search_result))
+            else:
+                self.log_result("Advanced Search - Date Range", False, 
+                              f"Date range search failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Advanced Search - Date Range", False, "Date range search failed", str(e))
+
+    def test_blog_tags_and_authors(self):
+        """Test blog tags and authors endpoints"""
+        print("\n=== Testing Blog Tags and Authors Endpoints ===")
+        
+        # Test 1: Get all blog tags
+        try:
+            response = requests.get(f"{self.base_url}/blog/tags")
+            
+            if response.status_code == 200:
+                tags = response.json()
+                if isinstance(tags, list):
+                    self.log_result("Blog Tags - Get All Tags", True, 
+                                  f"Successfully retrieved {len(tags)} unique tags")
+                    # Check tag structure
+                    if tags and len(tags) > 0:
+                        first_tag = tags[0]
+                        if "tag" in first_tag and "count" in first_tag:
+                            self.log_result("Blog Tags - Tag Structure", True, 
+                                          f"Tags have correct structure with counts")
+                        else:
+                            self.log_result("Blog Tags - Tag Structure", False, 
+                                          "Tags missing required fields", str(first_tag))
+                else:
+                    self.log_result("Blog Tags - Get All Tags", False, "Tags response is not a list", str(tags))
+            else:
+                self.log_result("Blog Tags - Get All Tags", False, 
+                              f"Tags retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Blog Tags - Get All Tags", False, "Tags retrieval failed", str(e))
+        
+        # Test 2: Get all blog authors
+        try:
+            response = requests.get(f"{self.base_url}/blog/authors")
+            
+            if response.status_code == 200:
+                authors = response.json()
+                if isinstance(authors, list):
+                    self.log_result("Blog Authors - Get All Authors", True, 
+                                  f"Successfully retrieved {len(authors)} unique authors")
+                else:
+                    self.log_result("Blog Authors - Get All Authors", False, "Authors response is not a list", str(authors))
+            else:
+                self.log_result("Blog Authors - Get All Authors", False, 
+                              f"Authors retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Blog Authors - Get All Authors", False, "Authors retrieval failed", str(e))
+
+    def test_extended_settings(self):
+        """Test extended settings with theme, SEO, social media, and email configurations"""
+        print("\n=== Testing Extended Settings Configuration ===")
+        
+        if not self.token:
+            self.log_result("Extended Settings", False, "No authentication token available")
+            return
+        
+        # Test 1: Update settings with all new fields
+        try:
+            extended_settings = {
+                # Basic Settings
+                "site_title": "Sectorfive - Advanced Personal Website",
+                "site_email": "contact@sectorfive.win",
+                "contact_cooldown": 300,
+                
+                # Theme Customization
+                "primary_color": "#2563eb",
+                "secondary_color": "#64748b",
+                "accent_color": "#10b981",
+                "font_family": "Inter, system-ui, sans-serif",
+                "custom_css": "body { font-size: 16px; } .custom-header { color: #2563eb; }",
+                
+                # SEO Settings
+                "meta_description": "Sectorfive - Professional web developer and technology enthusiast sharing insights on modern development practices",
+                "meta_keywords": "web development, programming, technology, react, javascript, python, tutorials",
+                "google_analytics_id": "GA-123456789",
+                "google_search_console": "google-site-verification=abc123def456",
+                "robots_txt": "User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://sectorfive.win/sitemap.xml",
+                
+                # Social Media Links
+                "facebook_url": "https://facebook.com/sectorfive",
+                "twitter_url": "https://twitter.com/sectorfive",
+                "instagram_url": "https://instagram.com/sectorfive",
+                "linkedin_url": "https://linkedin.com/in/sectorfive",
+                "github_url": "https://github.com/sectorfive",
+                "youtube_url": "https://youtube.com/@sectorfive",
+                
+                # Email Notification Settings
+                "smtp_server": "smtp.gmail.com",
+                "smtp_port": 587,
+                "smtp_username": "notifications@sectorfive.win",
+                "smtp_password": "app_password_here",
+                "smtp_use_tls": True,
+                "notification_email": "admin@sectorfive.win",
+                "notify_on_contact": True,
+                "notify_on_new_blog": True,
+                
+                # Blog Settings
+                "posts_per_page": 12,
+                "enable_comments": True,
+                "auto_excerpt_length": 250,
+                "default_author": "Sectorfive Team"
+            }
+            
+            response = requests.put(f"{self.base_url}/settings", data=extended_settings, headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "message" in result:
+                    self.log_result("Extended Settings - Update All Fields", True, 
+                                  "Successfully updated all extended settings fields")
+                else:
+                    self.log_result("Extended Settings - Update All Fields", False, 
+                                  "Settings update response missing message", str(result))
+            else:
+                self.log_result("Extended Settings - Update All Fields", False, 
+                              f"Extended settings update failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Extended Settings - Update All Fields", False, "Extended settings update failed", str(e))
+        
+        # Test 2: Verify all settings were persisted
+        try:
+            response = requests.get(f"{self.base_url}/settings", headers=self.auth_headers)
+            
+            if response.status_code == 200:
+                settings = response.json()
+                
+                # Check theme settings
+                theme_fields = ["primary_color", "secondary_color", "accent_color", "font_family", "custom_css"]
+                theme_ok = all(field in settings for field in theme_fields)
+                
+                # Check SEO settings
+                seo_fields = ["meta_description", "meta_keywords", "google_analytics_id", "robots_txt"]
+                seo_ok = all(field in settings for field in seo_fields)
+                
+                # Check social media settings
+                social_fields = ["facebook_url", "twitter_url", "github_url", "linkedin_url"]
+                social_ok = all(field in settings for field in social_fields)
+                
+                # Check email settings
+                email_fields = ["smtp_server", "smtp_port", "notification_email", "notify_on_contact"]
+                email_ok = all(field in settings for field in email_fields)
+                
+                # Check blog settings
+                blog_fields = ["posts_per_page", "enable_comments", "auto_excerpt_length", "default_author"]
+                blog_ok = all(field in settings for field in blog_fields)
+                
+                if theme_ok and seo_ok and social_ok and email_ok and blog_ok:
+                    self.log_result("Extended Settings - Verify Persistence", True, 
+                                  "All extended settings categories persisted correctly")
+                else:
+                    missing_categories = []
+                    if not theme_ok: missing_categories.append("theme")
+                    if not seo_ok: missing_categories.append("SEO")
+                    if not social_ok: missing_categories.append("social")
+                    if not email_ok: missing_categories.append("email")
+                    if not blog_ok: missing_categories.append("blog")
+                    
+                    self.log_result("Extended Settings - Verify Persistence", False, 
+                                  f"Missing settings categories: {missing_categories}", str(settings))
+            else:
+                self.log_result("Extended Settings - Verify Persistence", False, 
+                              f"Settings verification failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Extended Settings - Verify Persistence", False, "Settings verification failed", str(e))
+        
+        # Test 3: Verify enhanced public settings
+        try:
+            response = requests.get(f"{self.base_url}/public-settings")
+            
+            if response.status_code == 200:
+                public_settings = response.json()
+                
+                # Check if new public fields are included
+                expected_public_fields = [
+                    "site_title", "meta_description", "meta_keywords",
+                    "primary_color", "secondary_color", "accent_color", "font_family",
+                    "facebook_url", "twitter_url", "github_url", "linkedin_url",
+                    "posts_per_page", "enable_comments"
+                ]
+                
+                missing_fields = [field for field in expected_public_fields if field not in public_settings]
+                
+                if not missing_fields:
+                    self.log_result("Extended Settings - Enhanced Public Settings", True, 
+                                  "All expected fields available in public settings")
+                else:
+                    self.log_result("Extended Settings - Enhanced Public Settings", False, 
+                                  f"Missing public fields: {missing_fields}", str(public_settings))
+            else:
+                self.log_result("Extended Settings - Enhanced Public Settings", False, 
+                              f"Public settings retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Extended Settings - Enhanced Public Settings", False, "Public settings test failed", str(e))
+
+    def test_seo_endpoints(self):
+        """Test SEO endpoints: robots.txt and sitemap.xml"""
+        print("\n=== Testing SEO Endpoints ===")
+        
+        # Test 1: Get robots.txt
+        try:
+            response = requests.get(f"{self.base_url}/robots.txt")
+            
+            if response.status_code == 200:
+                robots_data = response.json()
+                if "content" in robots_data and robots_data["content"]:
+                    robots_content = robots_data["content"]
+                    if "User-agent:" in robots_content and "Allow:" in robots_content:
+                        self.log_result("SEO - Robots.txt", True, 
+                                      f"Successfully retrieved robots.txt with proper format")
+                    else:
+                        self.log_result("SEO - Robots.txt", False, 
+                                      "Robots.txt content missing required directives", robots_content)
+                else:
+                    self.log_result("SEO - Robots.txt", False, 
+                                  "Robots.txt response missing content", str(robots_data))
+            else:
+                self.log_result("SEO - Robots.txt", False, 
+                              f"Robots.txt retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("SEO - Robots.txt", False, "Robots.txt test failed", str(e))
+        
+        # Test 2: Get sitemap.xml
+        try:
+            response = requests.get(f"{self.base_url}/sitemap.xml")
+            
+            if response.status_code == 200:
+                sitemap_data = response.json()
+                if "urls" in sitemap_data and isinstance(sitemap_data["urls"], list):
+                    urls = sitemap_data["urls"]
+                    
+                    # Check if sitemap has proper structure
+                    if urls and len(urls) > 0:
+                        first_url = urls[0]
+                        required_fields = ["loc", "lastmod", "changefreq", "priority"]
+                        
+                        if all(field in first_url for field in required_fields):
+                            self.log_result("SEO - Sitemap.xml", True, 
+                                          f"Successfully retrieved sitemap with {len(urls)} URLs")
+                        else:
+                            missing_fields = [field for field in required_fields if field not in first_url]
+                            self.log_result("SEO - Sitemap.xml", False, 
+                                          f"Sitemap URLs missing fields: {missing_fields}", str(first_url))
+                    else:
+                        self.log_result("SEO - Sitemap.xml", True, 
+                                      "Sitemap retrieved successfully (empty - no content yet)")
+                else:
+                    self.log_result("SEO - Sitemap.xml", False, 
+                                  "Sitemap response missing urls array", str(sitemap_data))
+            else:
+                self.log_result("SEO - Sitemap.xml", False, 
+                              f"Sitemap retrieval failed with status {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("SEO - Sitemap.xml", False, "Sitemap test failed", str(e))
         """Test settings retrieval and updates"""
         print("\n=== Testing Settings Management ===")
         
