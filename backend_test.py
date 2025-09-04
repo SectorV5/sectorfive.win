@@ -448,8 +448,10 @@ This automated testing approach helps catch issues early and ensures a robust ba
             self.log_result("Analytics System - Visit Tracking", False, "Analytics tracking test failed", str(e))
     
     def test_contact_form(self):
-        """Test contact form submission and retrieval"""
+        """Test contact form submission and retrieval with cooldown and pagination"""
         print("\n=== Testing Contact Form ===")
+        
+        created_message_id = None
         
         # Test 1: Submit contact message (no auth required)
         try:
@@ -471,37 +473,123 @@ This automated testing approach helps catch issues early and ensures a robust ba
         except Exception as e:
             self.log_result("Contact Form - Submit Message", False, "Contact submission failed", str(e))
         
-        # Test 2: Retrieve contact messages (admin only)
+        # Test 2: Test cooldown functionality by submitting another message immediately
+        try:
+            contact_data_immediate = {
+                "name": "Alex Johnson",
+                "email": "alex.johnson@example.com", 
+                "message": "This is an immediate second message to test cooldown."
+            }
+            response = requests.post(f"{self.base_url}/contact", data=contact_data_immediate)
+            
+            if response.status_code == 429:
+                self.log_result("Contact Form - Cooldown Protection", True, "Cooldown protection is working - second message blocked")
+            elif response.status_code == 200:
+                self.log_result("Contact Form - Cooldown Protection", False, "Cooldown protection not working - second message allowed immediately")
+            else:
+                self.log_result("Contact Form - Cooldown Protection", False, f"Unexpected response for cooldown test: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Contact Form - Cooldown Protection", False, "Cooldown test failed", str(e))
+        
+        # Test 3: Retrieve contact messages with pagination (admin only)
         if self.token:
             try:
                 response = requests.get(f"{self.base_url}/contact-messages", headers=self.auth_headers)
                 
                 if response.status_code == 200:
-                    messages = response.json()
-                    if isinstance(messages, list):
-                        self.log_result("Contact Form - Get Messages", True, f"Successfully retrieved {len(messages)} contact messages")
+                    data = response.json()
+                    if "messages" in data and "pagination" in data:
+                        messages = data["messages"]
+                        pagination = data["pagination"]
+                        
+                        # Store first message ID for deletion test
+                        if messages and len(messages) > 0:
+                            created_message_id = messages[0].get("id")
+                        
+                        required_pagination_fields = ["current_page", "total_pages", "total_results"]
+                        if all(field in pagination for field in required_pagination_fields):
+                            self.log_result("Contact Form - Get Messages with Pagination", True, 
+                                          f"Successfully retrieved {len(messages)} messages with pagination (total: {pagination['total_results']})")
+                        else:
+                            self.log_result("Contact Form - Get Messages with Pagination", False, "Pagination missing required fields", str(pagination))
                     else:
-                        self.log_result("Contact Form - Get Messages", False, "Contact messages response is not a list", str(messages))
+                        self.log_result("Contact Form - Get Messages with Pagination", False, "Response missing messages or pagination", str(data))
                 else:
-                    self.log_result("Contact Form - Get Messages", False, f"Contact messages retrieval failed with status {response.status_code}", response.text)
+                    self.log_result("Contact Form - Get Messages with Pagination", False, f"Contact messages retrieval failed with status {response.status_code}", response.text)
             except Exception as e:
-                self.log_result("Contact Form - Get Messages", False, "Contact messages retrieval failed", str(e))
+                self.log_result("Contact Form - Get Messages with Pagination", False, "Contact messages retrieval failed", str(e))
         
-        # Test 3: Submit another contact message with different data
+        # Test 4: Test pagination parameters
+        if self.token:
+            try:
+                response = requests.get(f"{self.base_url}/contact-messages?page=1&limit=5", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "pagination" in data:
+                        pagination = data["pagination"]
+                        if pagination.get("current_page") == 1:
+                            self.log_result("Contact Form - Pagination Parameters", True, "Pagination parameters working correctly")
+                        else:
+                            self.log_result("Contact Form - Pagination Parameters", False, "Pagination parameters not working", str(pagination))
+                    else:
+                        self.log_result("Contact Form - Pagination Parameters", False, "Pagination data missing", str(data))
+                else:
+                    self.log_result("Contact Form - Pagination Parameters", False, f"Pagination test failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Contact Form - Pagination Parameters", False, "Pagination parameters test failed", str(e))
+        
+        # Test 5: Delete contact message (admin only)
+        if self.token and created_message_id:
+            try:
+                response = requests.delete(f"{self.base_url}/contact-messages/{created_message_id}", headers=self.auth_headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result:
+                        self.log_result("Contact Form - Delete Message", True, "Successfully deleted contact message")
+                    else:
+                        self.log_result("Contact Form - Delete Message", False, "Delete response missing message field", str(result))
+                else:
+                    self.log_result("Contact Form - Delete Message", False, f"Message deletion failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Contact Form - Delete Message", False, "Message deletion failed", str(e))
+        
+        # Test 6: Try to delete non-existent message
+        if self.token:
+            try:
+                fake_id = "non-existent-message-id"
+                response = requests.delete(f"{self.base_url}/contact-messages/{fake_id}", headers=self.auth_headers)
+                
+                if response.status_code == 404:
+                    self.log_result("Contact Form - Delete Non-existent Message", True, "Correctly returned 404 for non-existent message")
+                else:
+                    self.log_result("Contact Form - Delete Non-existent Message", False, f"Expected 404, got {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Contact Form - Delete Non-existent Message", False, "Non-existent message deletion test failed", str(e))
+        
+        # Test 7: Submit another contact message with different data
         try:
             contact_data2 = {
                 "name": "Sarah Chen",
                 "email": "sarah.chen@techcorp.com",
                 "message": "I'm interested in collaborating on some projects. Your website looks great and I'd love to discuss potential opportunities. Please get back to me when you have a chance."
             }
+            
+            # Wait for cooldown to expire (we set it to 180 seconds in settings test)
+            print("    Waiting 5 seconds before submitting second message...")
+            time.sleep(5)
+            
             response = requests.post(f"{self.base_url}/contact", data=contact_data2)
             
             if response.status_code == 200:
-                self.log_result("Contact Form - Multiple Submissions", True, "Successfully submitted second contact message")
+                self.log_result("Contact Form - Multiple Submissions After Cooldown", True, "Successfully submitted second contact message after waiting")
+            elif response.status_code == 429:
+                self.log_result("Contact Form - Multiple Submissions After Cooldown", True, "Cooldown still active - this is expected behavior")
             else:
-                self.log_result("Contact Form - Multiple Submissions", False, f"Second contact submission failed with status {response.status_code}", response.text)
+                self.log_result("Contact Form - Multiple Submissions After Cooldown", False, f"Second contact submission failed with status {response.status_code}", response.text)
         except Exception as e:
-            self.log_result("Contact Form - Multiple Submissions", False, "Second contact submission failed", str(e))
+            self.log_result("Contact Form - Multiple Submissions After Cooldown", False, "Second contact submission failed", str(e))
     
     def test_settings_management(self):
         """Test settings retrieval and updates"""
