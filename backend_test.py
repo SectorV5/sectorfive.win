@@ -1223,6 +1223,8 @@ This automated testing approach helps catch issues early and ensures a robust ba
                               f"Sitemap retrieval failed with status {response.status_code}", response.text)
         except Exception as e:
             self.log_result("SEO - Sitemap.xml", False, "Sitemap test failed", str(e))
+    
+    def test_settings_management(self):
         """Test settings retrieval and updates"""
         print("\n=== Testing Settings Management ===")
         
