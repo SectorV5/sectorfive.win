@@ -48,7 +48,14 @@ def make_request(method, endpoint, data=None, headers=None, files=None):
             raise ValueError(f"Unsupported method: {method}")
         
         return response
+    except requests.exceptions.Timeout:
+        print(f"Timeout error for {method} {url}")
+        return None
+    except requests.exceptions.ConnectionError:
+        print(f"Connection error for {method} {url}")
+        return None
     except requests.exceptions.RequestException as e:
+        print(f"Request exception for {method} {url}: {str(e)}")
         return None
 
 def test_health_check():
