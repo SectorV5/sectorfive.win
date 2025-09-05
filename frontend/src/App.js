@@ -526,24 +526,72 @@ const Login = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  
   const handleSubmit = async (e) => {
-    e.preventDefault(); setLoading(true); setError('');
+    e.preventDefault(); 
+    setLoading(true); 
+    setError('');
+    
     try {
       const response = await axios.post(`${API}/login`, credentials);
       login(response.data.access_token);
-      if (response.data.must_change_password) navigate('/first-setup');
-      else navigate('/management-panel');
-    } catch (error) { setError('Invalid credentials'); } finally { setLoading(false); }
+      
+      if (response.data.must_change_password) {
+        navigate('/first-setup');
+      } else {
+        navigate('/management-panel');
+      }
+    } catch (error) { 
+      setError('Invalid credentials. Please check your username and password.'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
+  
   return (
     <div className="page-container">
       <RetroWindow title="🔐 Admin Login" className="login-window">
-        <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-form">
           {error && <div className="error-message">{error}</div>}
-          <div className="form-group"><label>Username:</label><input type="text" name="username" value={credentials.username} onChange={(e)=>setCredentials({...credentials, username:e.target.value})} required className="retro-input" /></div>
-          <div className="form-group"><label>Password:</label><input type="password" name="password" value={credentials.password} onChange={(e)=>setCredentials({...credentials, password:e.target.value})} required className="retro-input" /></div>
-          <RetroButton type="submit" disabled={loading}>{loading ? <>🔄 Logging in...</> : <>🚀 Login</>}</RetroButton>
-        </form>
+          
+          <div className="login-info">
+            <h3>Welcome to Admin Panel</h3>
+            <p>Default credentials for first login:</p>
+            <div className="default-creds">
+              <strong>Username:</strong> admin<br/>
+              <strong>Password:</strong> admin
+            </div>
+            <p><small>You'll be asked to change these on first login for security.</small></p>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Username:</label>
+              <input 
+                type="text" 
+                className="retro-input" 
+                value={credentials.username}
+                onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+                required 
+                disabled={loading}
+              />
+            </div>
+            <div className="form-group">
+              <label>Password:</label>
+              <input 
+                type="password" 
+                className="retro-input" 
+                value={credentials.password}
+                onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                required 
+                disabled={loading}
+              />
+            </div>
+            <button type="submit" className="retro-button" disabled={loading}>
+              {loading ? '🔄 Logging in...' : '🔐 Login'}
+            </button>
+          </form>
+        </div>
       </RetroWindow>
     </div>
   );
