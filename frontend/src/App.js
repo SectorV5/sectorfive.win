@@ -305,10 +305,10 @@ const BlogPost = () => {
   if (loading) return <div className="loading">Loading post...</div>;
   if (!post) return <div className="error">Post not found 😕</div>;
   return (
-    <RetroWindow title={post.title} className="main-content">
+    <ModernWindow title={post.title} className="main-content">
       <div className="post-meta">📅 {new Date(post.created_at).toLocaleDateString()}</div>
       <div className="content" dangerouslySetInnerHTML={{ __html: post.content }} />
-    </RetroWindow>
+    </ModernWindow>
   );
 };
 
