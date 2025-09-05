@@ -80,6 +80,7 @@ const Navigation = ({ pages }) => {
           {pages && pages.filter(p => !p.is_homepage).map(page => (
             <Link key={page.id} to={`/page/${page.slug}`}>{page.title}</Link>
           ))}
+          <Link to="/login" className="admin-link">🔧 Admin</Link>
           {isAuthenticated && (<button onClick={logout} className="nav-button">Logout</button>)}
         </div>
       </div>
