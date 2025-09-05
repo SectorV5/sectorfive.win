@@ -86,7 +86,7 @@ const Footer = () => {
 const Navigation = ({ pages }) => {
   const { isAuthenticated, logout } = useAuth();
   return (
-    <nav className="retro-nav">
+    <nav className="modern-nav">
       <div className="nav-container">
         <Link to="/" className="nav-logo">🏠 Personal Website</Link>
         <div className="nav-links">
