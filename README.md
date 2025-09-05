@@ -185,7 +185,7 @@ Inspired by Windows XP/Vista/7 Aero design with a nostalgic feel and modern func
 #### Backend (.env)
 ```bash
 MONGO_URL=mongodb://mongo:27017
-DB_NAME=sectorfive_db
+DB_NAME=personal_website_db
 CORS_ORIGINS=*
 ```
 
