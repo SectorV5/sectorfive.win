@@ -129,9 +129,9 @@ const Home = () => {
   }, []);
   if (loading) return (<div className="loading"><div className="retro-spinner"></div>Loading...</div>);
   return (
-    <RetroWindow title="🏠 Welcome to Your Website" className="main-content">
+    <ModernWindow title="🏠 Welcome to Your Website" className="main-content">
       <div className="content" dangerouslySetInnerHTML={{ __html: content }} />
-    </RetroWindow>
+    </ModernWindow>
   );
 };
 
