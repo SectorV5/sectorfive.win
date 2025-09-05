@@ -241,7 +241,7 @@ const Blog = () => {
               ))}
             </div>
             
-            {blogData.pagination && blogData.pagination.total_pages > 1 && (
+            {blogData && blogData.pagination && blogData.pagination.total_pages > 1 && (
               <div className="pagination">
                 <button 
                   onClick={() => setPage(Math.max(1, page - 1))} 
