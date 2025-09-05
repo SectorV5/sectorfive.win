@@ -36,10 +36,13 @@ check_docker() {
         fi
     fi
 
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-        echo -e "${RED}Docker Compose is not installed!${NC}"
-        echo "Installing Docker Compose..."
-        install_docker_compose
+    # Check for modern docker compose (prefer built-in over standalone)
+    if ! docker compose version &> /dev/null; then
+        if ! command -v docker-compose &> /dev/null; then
+            echo -e "${RED}Docker Compose is not available!${NC}"
+            echo "Installing Docker Compose..."
+            install_docker_compose
+        fi
     fi
 }
 
