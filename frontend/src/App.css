@@ -186,15 +186,75 @@ body {
     text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
 }
 
-/* Page Layout */
-.page-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
+/* Page Layout - Full Width Retro Style */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content {
-    margin-top: 0;
+  flex: 1;
+  width: 100%;
+  border-left: 3px solid #4a4a4a;
+  border-right: 3px solid #4a4a4a;
+  border-top: 1px solid #7a7a7a;
+  background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Retro Footer */
+.retro-footer {
+  background: linear-gradient(180deg, #d8d8d8 0%, #c0c0c0 50%, #a8a8a8 100%);
+  border-top: 2px solid #7a7a7a;
+  border-bottom: 1px solid #4a4a4a;
+  padding: 12px 0;
+  margin-top: auto;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 -2px 6px rgba(0,0,0,0.2);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #333;
+}
+
+.footer-left p, .footer-right p {
+  margin: 2px 0;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
+}
+
+.footer-left strong {
+  color: #003d6b;
+  font-weight: bold;
+}
+
+.footer-right {
+  text-align: right;
+}
+
+.footer-content a {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer-content a:hover {
+  text-decoration: underline;
+  color: #0052a3;
 }
 
 .content {
