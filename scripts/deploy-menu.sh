@@ -186,10 +186,10 @@ show_logs() {
     
     cd "$ROOT_DIR"
     case $choice in
-        1) docker-compose logs -f ;;
-        2) docker-compose logs -f frontend ;;
-        3) docker-compose logs -f backend ;;
-        4) docker-compose logs -f mongo ;;
+        1) docker_compose_cmd logs -f ;;
+        2) docker_compose_cmd logs -f frontend ;;
+        3) docker_compose_cmd logs -f backend ;;
+        4) docker_compose_cmd logs -f mongo ;;
         5) return ;;
         *) echo -e "${RED}Invalid option${NC}"; sleep 2 ;;
     esac
