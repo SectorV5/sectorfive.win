@@ -255,7 +255,7 @@ restore_data() {
                 # Restore database
                 if [ -f "$BACKUP_PATH/database.archive" ]; then
                     echo -e "${YELLOW}Restoring database...${NC}"
-                    docker-compose exec -T mongo mongorestore --db personal_website_db --archive < "$BACKUP_PATH/database.archive"
+                    docker_compose_cmd exec -T mongo mongorestore --db personal_website_db --archive < "$BACKUP_PATH/database.archive"
                 fi
                 
                 # Restore files
