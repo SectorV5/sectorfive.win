@@ -145,7 +145,7 @@ Inspired by Windows XP/Vista/7 Aero design with a nostalgic feel and modern func
    # Create .env file
    cat > .env << EOF
    MONGO_URL=mongodb://localhost:27017
-   DB_NAME=sectorfive_db
+   DB_NAME=personal_website_db
    CORS_ORIGINS=http://localhost:3000
    EOF
    
