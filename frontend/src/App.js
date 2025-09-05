@@ -275,8 +275,7 @@ const Blog = () => {
         ) : (
           <p>No blog posts found. {search || selectedTags ? 'Try adjusting your search or filters.' : 'Check back soon!'}</p>
         )}
-      </RetroWindow>
-    </div>
+    </RetroWindow>
   );
 };
 
