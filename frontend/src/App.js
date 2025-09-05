@@ -1461,9 +1461,9 @@ const PageView = () => {
   if (loading) return <div className="loading">Loading page...</div>;
   if (!page) return <div className="error">Page not found 😕</div>;
   return (
-    <div className="page-container">
-      <RetroWindow title={page.title} className="main-content"><div className="content" dangerouslySetInnerHTML={{ __html: page.content }} /></RetroWindow>
-    </div>
+    <RetroWindow title={page.title} className="main-content">
+      <div className="content" dangerouslySetInnerHTML={{ __html: page.content }} />
+    </RetroWindow>
   );
 };
 
