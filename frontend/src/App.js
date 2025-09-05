@@ -66,6 +66,15 @@ const RetroWindow = ({ title, children, className = "" }) => (
   </div>
 );
 
+const ModernWindow = ({ title, children, className = "" }) => (
+  <div className={`modern-window ${className}`}>
+    <div className="window-header">
+      <div className="window-title">{title}</div>
+    </div>
+    <div className="window-content">{children}</div>
+  </div>
+);
+
 const Footer = () => {
   return (
     <footer className="modern-footer">
