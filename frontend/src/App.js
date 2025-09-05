@@ -170,10 +170,9 @@ const Blog = () => {
   if (loading) return <div className="loading">Loading blog posts...</div>;
   
   return (
-    <div className="page-container">
-      <RetroWindow title="📝 Blog Posts" className="main-content">
-        {/* Search and Filter Controls */}
-        <div className="blog-controls">
+    <RetroWindow title="📝 Blog Posts" className="main-content">
+      {/* Search and Filter Controls */}
+      <div className="blog-controls">
           <div className="search-section">
             <input 
               type="text" 
