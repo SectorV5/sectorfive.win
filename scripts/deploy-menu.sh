@@ -87,6 +87,18 @@ install_docker_compose() {
     echo -e "${GREEN}Docker Compose installed successfully!${NC}"
 }
 
+# Helper function to use correct docker compose command
+docker_compose_cmd() {
+    if docker compose version &> /dev/null 2>&1; then
+        docker compose "$@"
+    elif command -v docker-compose &> /dev/null; then
+        docker-compose "$@"
+    else
+        echo -e "${RED}Error: Neither 'docker compose' nor 'docker-compose' is available!${NC}"
+        exit 1
+    fi
+}
+
 # Deploy the application
 deploy_app() {
     echo -e "${YELLOW}Deploying Personal Website...${NC}"
