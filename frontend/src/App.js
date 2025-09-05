@@ -658,7 +658,6 @@ const Admin = () => {
           {activeTab === 'settings' && <AdminSettings />}
         </div>
       </RetroWindow>
-    </div>
   );
 };
 
