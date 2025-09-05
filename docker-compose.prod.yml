@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+      - ./backups:/backups
+    environment:
+      - MONGO_INITDB_DATABASE=personal_website_db
+    networks:
+      - website_network
+    # Don't expose port in production - only internal access
+    
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - DB_NAME=personal_website_db
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://yourdomain.com}
+      - UPLOAD_PATH=/app/uploads
+      - JWT_SECRET=${JWT_SECRET}
+      - BASE_URL=${BASE_URL:-https://yourdomain.com}
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8001"  # Bind only to localhost
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backups:/app/backups
+    networks:
+      - website_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-https://yourdomain.com/api}
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"  # Bind only to localhost
+    networks:
+      - website_network
+      
+volumes:
+  mongo_data:
+
+networks:
+  website_network:
+    driver: bridge
