@@ -485,8 +485,7 @@ const Gallery = () => {
           </div>
         )}
       </RetroWindow>
-    );
-  };
+  );
 };
 
 const Contact = () => {
