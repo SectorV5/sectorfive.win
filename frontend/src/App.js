@@ -943,7 +943,7 @@ const AdminBlog = () => {
               </tr>
             </thead>
             <tbody>
-              {blogData.posts.map(post => (
+              {blogData && blogData.posts ? blogData.posts.map(post => (
                 <tr key={post.id}>
                   <td>{post.title}</td>
                   <td>
