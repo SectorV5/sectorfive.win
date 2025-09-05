@@ -21,6 +21,7 @@ services:
       - DB_NAME=personal_website_db
       - CORS_ORIGINS=*
       - UPLOAD_PATH=/app/uploads
+      - JWT_SECRET=your-super-secure-jwt-secret-key-here-CHANGE-THIS-IN-PRODUCTION
     depends_on:
       - mongo
     restart: unless-stopped
