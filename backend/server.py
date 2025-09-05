@@ -30,7 +30,7 @@ UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Security
-JWT_SECRET = "sectorfive-secure-secret-key-2024"
+JWT_SECRET = os.environ.get('JWT_SECRET', 'sectorfive-secure-secret-key-2024-CHANGE-THIS-IN-PRODUCTION')
 security = HTTPBearer()
 
 # Rate limiting storage (in production, use Redis)
