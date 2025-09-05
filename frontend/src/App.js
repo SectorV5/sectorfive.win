@@ -109,25 +109,20 @@ const Home = () => {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    const fetchHomepage = async () => {
+    const fetchContent = async () => {
       try {
-        const response = await axios.get(`${API}/page/home`);
-        setContent(response.data.content);
-      } catch (error) {
-        setContent('Welcome to your personal website!');
-      } finally {
-        setLoading(false);
-      }
+        const response = await apiCall('/page/home');
+        setContent(response.data.content || '<h1>Welcome!</h1><p>Edit this content in Admin → Pages.</p>');
+      } catch (error) { setContent('<h1>Welcome!</h1><p>Edit this content in Admin → Pages.</p>'); }
+      finally { setLoading(false); }
     };
-    fetchHomepage();
+    fetchContent();
   }, []);
   if (loading) return (<div className="loading"><div className="retro-spinner"></div>Loading...</div>);
   return (
-    <div className="page-container">
-      <RetroWindow title="🏠 Welcome to Your Website" className="main-content">
-        <div className="content" dangerouslySetInnerHTML={{ __html: content }} />
-      </RetroWindow>
-    </div>
+    <RetroWindow title="🏠 Welcome to Your Website" className="main-content">
+      <div className="content" dangerouslySetInnerHTML={{ __html: content }} />
+    </RetroWindow>
   );
 };
 
