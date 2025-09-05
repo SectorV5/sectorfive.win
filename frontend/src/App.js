@@ -639,9 +639,8 @@ const Admin = () => {
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (me && me.must_change_password) return <Navigate to="/first-setup" />;
   return (
-    <div className="page-container">
-      <RetroWindow title="⚙️ Admin Dashboard" className="admin-window">
-        <div className="admin-tabs">
+    <RetroWindow title="⚙️ Admin Dashboard" className="admin-window">
+      <div className="admin-tabs">
           <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>📊 Dashboard</button>
           <button className={`tab-button ${activeTab === 'pages' ? 'active' : ''}`} onClick={() => setActiveTab('pages')}>📄 Pages</button>
           <button className={`tab-button ${activeTab === 'blog' ? 'active' : ''}`} onClick={() => setActiveTab('blog')}>📝 Blog</button>
