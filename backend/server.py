@@ -449,7 +449,7 @@ async def initialize_data():
         
         admin = User(
             username="admin",
-            email="admin@sectorfive.win",
+            email="admin@example.com",
             display_name="Site Owner",
             password_hash=hash_password("admin"),
             must_change_password=True,
