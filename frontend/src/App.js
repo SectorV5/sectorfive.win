@@ -348,9 +348,8 @@ const Gallery = () => {
   if (loading) return <div className="loading">Loading gallery...</div>;
   
   return (
-    <div className="page-container">
-      <RetroWindow title="🖼️ Image Gallery" className="main-content">
-        {/* Search and Filter Controls */}
+    <RetroWindow title="🖼️ Image Gallery" className="main-content">
+      {/* Search and Filter Controls */}
         <div className="gallery-controls">
           <div className="search-section">
             <input 
