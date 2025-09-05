@@ -66,6 +66,23 @@ const RetroWindow = ({ title, children, className = "" }) => (
   </div>
 );
 
+const Footer = () => {
+  return (
+    <footer className="retro-footer">
+      <div className="footer-content">
+        <div className="footer-left">
+          <p>© 2025 Made by <strong>Sectorfive</strong></p>
+          <p>Licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU GPL v3</a></p>
+        </div>
+        <div className="footer-right">
+          <p>Retro Personal Website Template</p>
+          <p>Built with ❤️ for the retro web</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
 const Navigation = ({ pages }) => {
   const { isAuthenticated, logout } = useAuth();
   return (
