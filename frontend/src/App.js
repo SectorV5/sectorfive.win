@@ -531,8 +531,23 @@ const Login = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showDefaultCreds, setShowDefaultCreds] = useState(true);
   const { login } = useAuth();
   const navigate = useNavigate();
+  
+  // Check if default credentials have been changed
+  useEffect(() => {
+    const checkDefaultCreds = async () => {
+      try {
+        const response = await axios.get(`${API}/check-default-credentials`);
+        setShowDefaultCreds(response.data.has_default_credentials);
+      } catch (error) {
+        // If endpoint doesn't exist, assume default credentials exist
+        setShowDefaultCreds(true);
+      }
+    };
+    checkDefaultCreds();
+  }, []);
   
   const handleSubmit = async (e) => {
     e.preventDefault(); 
@@ -556,10 +571,11 @@ const Login = () => {
   };
   
   return (
-    <RetroWindow title="🔐 Admin Login" className="login-window">
-        <div className="login-form">
-          {error && <div className="error-message">{error}</div>}
-          
+    <ModernWindow title="🔐 Admin Login" className="login-window">
+      <div className="login-form">
+        {error && <div className="error-message">{error}</div>}
+        
+        {showDefaultCreds && (
           <div className="login-info">
             <h3>Welcome to Admin Panel</h3>
             <p>Default credentials for first login:</p>
@@ -569,36 +585,37 @@ const Login = () => {
             </div>
             <p><small>You'll be asked to change these on first login for security.</small></p>
           </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Username:</label>
-              <input 
-                type="text" 
-                className="retro-input" 
-                value={credentials.username}
-                onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-                required 
-                disabled={loading}
-              />
-            </div>
-            <div className="form-group">
-              <label>Password:</label>
-              <input 
-                type="password" 
-                className="retro-input" 
-                value={credentials.password}
-                onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                required 
-                disabled={loading}
-              />
-            </div>
-            <button type="submit" className="retro-button" disabled={loading}>
-              {loading ? '🔄 Logging in...' : '🔐 Login'}
-            </button>
-          </form>
-        </div>
-      </RetroWindow>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Username:</label>
+            <input 
+              type="text" 
+              className="modern-input" 
+              value={credentials.username}
+              onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+              required 
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label>Password:</label>
+            <input 
+              type="password" 
+              className="modern-input" 
+              value={credentials.password}
+              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+              required 
+              disabled={loading}
+            />
+          </div>
+          <button type="submit" className="modern-button primary" disabled={loading}>
+            {loading ? '🔄 Logging in...' : '🔐 Login'}
+          </button>
+        </form>
+      </div>
+    </ModernWindow>
   );
 };
 
