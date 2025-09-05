@@ -450,7 +450,6 @@
 
 ## test_plan:
   current_focus:
-    - "Gallery System Implementation"
     - "Docker Configuration Updates" 
   stuck_tasks: []
   test_all: false
