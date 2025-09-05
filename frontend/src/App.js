@@ -549,8 +549,7 @@ const Login = () => {
   };
   
   return (
-    <div className="page-container">
-      <RetroWindow title="🔐 Admin Login" className="login-window">
+    <RetroWindow title="🔐 Admin Login" className="login-window">
         <div className="login-form">
           {error && <div className="error-message">{error}</div>}
           
