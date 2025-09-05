@@ -292,9 +292,9 @@ update_app() {
     fi
     
     # Rebuild and restart
-    docker-compose down
-    docker-compose build --no-cache
-    docker-compose up -d
+    docker_compose_cmd down
+    docker_compose_cmd build --no-cache
+    docker_compose_cmd up -d
     
     echo -e "${GREEN}Update completed!${NC}"
     echo "Press any key to continue..."
