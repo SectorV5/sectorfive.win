@@ -960,7 +960,13 @@ const AdminBlog = () => {
                     <RetroButton onClick={() => handleDelete(post)}>Delete</RetroButton>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan="6" style={{textAlign: 'center', padding: '20px'}}>
+                    {loading ? 'Loading posts...' : 'No blog posts found'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           
