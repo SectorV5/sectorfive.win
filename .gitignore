@@ -94,3 +94,7 @@ backups/
 # Temporary files
 *.tmp
 *.temp
+-e 
+# Environment files
+*.env
+*.env.*
