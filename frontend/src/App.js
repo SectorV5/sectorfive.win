@@ -221,7 +221,7 @@ const Blog = () => {
           )}
         </div>
         
-        {blogData && blogData.posts.length > 0 ? (
+        {blogData && blogData.posts && blogData.posts.length > 0 ? (
           <>
             <div className="blog-posts">
               {blogData.posts.map(post => (
