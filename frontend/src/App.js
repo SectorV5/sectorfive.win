@@ -591,7 +591,6 @@ const Login = () => {
           </form>
         </div>
       </RetroWindow>
-    </div>
   );
 };
 
