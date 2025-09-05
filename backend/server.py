@@ -1267,6 +1267,18 @@ async def upload_gallery_image(
     result["file_url"] = f"/api/uploads/{unique_filename}"
     return result
 
+@api_router.get("/gallery/tags")
+async def get_gallery_tags():
+    """Get all unique tags used in gallery images"""
+    pipeline = [
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$project": {"name": "$_id", "count": 1, "_id": 0}}
+    ]
+    tags = await db.gallery_images.aggregate(pipeline).to_list(length=None)
+    return tags
+
 @api_router.get("/gallery/{image_id}")
 async def get_gallery_image(image_id: str):
     image = await db.gallery_images.find_one({"id": image_id})
@@ -1318,18 +1330,6 @@ async def delete_gallery_image(image_id: str, current_user: str = Depends(get_cu
         raise HTTPException(status_code=404, detail="Image not found")
     
     return {"message": "Image deleted successfully"}
-
-@api_router.get("/gallery/tags")
-async def get_gallery_tags():
-    """Get all unique tags used in gallery images"""
-    pipeline = [
-        {"$unwind": "$tags"},
-        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$project": {"name": "$_id", "count": 1, "_id": 0}}
-    ]
-    tags = await db.gallery_images.aggregate(pipeline).to_list(length=None)
-    return tags
 
 # Analytics endpoints
 @api_router.get("/analytics")
