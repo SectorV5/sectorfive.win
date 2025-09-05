@@ -615,9 +615,8 @@ const FirstSetup = () => {
     } catch (e) { alert(e.response?.data?.detail || 'Failed to update credentials'); } finally { setSaving(false); }
   };
   return (
-    <div className="page-container">
-      <RetroWindow title="🛡️ First-time Setup" className="login-window">
-        <p>Please change the default admin credentials to continue.</p>
+    <RetroWindow title="🛡️ First-time Setup" className="login-window">
+      <p>Please change the default admin credentials to continue.</p>
         {me && me.must_change_password === false && (
           <div className="success-message">Already updated. You can go to the <Link to="/management-panel">Admin Dashboard</Link>.</div>
         )}
