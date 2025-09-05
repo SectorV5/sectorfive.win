@@ -223,7 +223,6 @@ const Blog = () => {
               </div>
             </div>
           )}
-        </div>
         
         {blogData && blogData.posts && blogData.posts.length > 0 ? (
           <>
