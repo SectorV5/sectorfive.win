@@ -68,15 +68,15 @@ const RetroWindow = ({ title, children, className = "" }) => (
 
 const Footer = () => {
   return (
-    <footer className="retro-footer">
+    <footer className="modern-footer">
       <div className="footer-content">
         <div className="footer-left">
           <p>© 2025 Made by <strong>Sectorfive</strong></p>
           <p>Licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU GPL v3</a></p>
         </div>
         <div className="footer-right">
-          <p>Retro Personal Website Template</p>
-          <p>Built with ❤️ for the retro web</p>
+          <p>Personal Website Template</p>
+          <p>Built with ❤️ for modern web</p>
         </div>
       </div>
     </footer>
