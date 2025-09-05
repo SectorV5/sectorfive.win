@@ -755,6 +755,8 @@ const AdminBlog = () => {
       setBlogData(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);
+    } finally { 
+      setLoading(false); 
     }
   };
   
