@@ -105,9 +105,9 @@ deploy_app() {
     cd "$ROOT_DIR"
     
     # Build and start containers
-    docker-compose down --remove-orphans 2>/dev/null || true
-    docker-compose build --no-cache
-    docker-compose up -d
+    docker_compose_cmd down --remove-orphans 2>/dev/null || true
+    docker_compose_cmd build --no-cache
+    docker_compose_cmd up -d
     
     echo -e "${GREEN}Deployment completed!${NC}"
     echo ""
