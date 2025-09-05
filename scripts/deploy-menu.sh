@@ -159,10 +159,10 @@ cleanup_app() {
         cd "$ROOT_DIR"
         
         # Stop containers
-        docker-compose down --remove-orphans
+        docker_compose_cmd down --remove-orphans
         
         # Remove images
-        docker-compose down --rmi all --volumes --remove-orphans 2>/dev/null || true
+        docker_compose_cmd down --rmi all --volumes --remove-orphans 2>/dev/null || true
         
         # Remove dangling images
         docker image prune -f
