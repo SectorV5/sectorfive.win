@@ -30,8 +30,11 @@ next-env.d.ts
 dist/
 dist
 
-# Environment files (comprehensive coverage)
-
+# Environment files
+*.env
+*.env.*
+!.env.example
+!.env.prod.example
 *token.json*
 *credentials.json*
 
@@ -76,28 +79,18 @@ agenthub/agents/youtube/db
 # Build caches
 .cache/
 
-# Mobile development
-android-sdk/ -e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
+# Docker
+docker-compose.override.yml
+
+# Uploads (comment out if you want to track uploads)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Backups
+backups/
+*.sql
+*.dump
+
+# Temporary files
+*.tmp
+*.temp
