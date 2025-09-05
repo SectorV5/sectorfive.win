@@ -387,7 +387,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Project Structure
 ```
-sectorfive-website/
+personal-website-template/
 ├── backend/
 │   ├── server.py          # FastAPI main application
 │   ├── requirements.txt   # Python dependencies
