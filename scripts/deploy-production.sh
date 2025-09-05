@@ -68,14 +68,26 @@ fi
 
 cd "$ROOT_DIR"
 
+# Helper function to use correct docker compose command
+docker_compose_cmd() {
+    if docker compose version &> /dev/null 2>&1; then
+        docker compose "$@"
+    elif command -v docker-compose &> /dev/null; then
+        docker-compose "$@"
+    else
+        echo -e "${RED}Error: Neither 'docker compose' nor 'docker-compose' is available!${NC}"
+        exit 1
+    fi
+}
+
 echo -e "${YELLOW}Stopping existing containers...${NC}"
-docker-compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+docker_compose_cmd -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
 
 echo -e "${YELLOW}Building production images...${NC}"
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker_compose_cmd -f docker-compose.prod.yml build --no-cache
 
 echo -e "${YELLOW}Starting production services...${NC}"
-docker-compose -f docker-compose.prod.yml up -d
+docker_compose_cmd -f docker-compose.prod.yml up -d
 
 echo -e "${YELLOW}Waiting for services to start...${NC}"
 sleep 15
