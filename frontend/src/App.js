@@ -506,19 +506,17 @@ const Contact = () => {
     } finally { setSending(false); }
   };
   return (
-    <div className="page-container">
-      <RetroWindow title="📬 Contact Me" className="main-content">
-        {sent ? (<div className="success-message">✅ Message sent successfully! I'll get back to you soon.</div>) : (
-          <form onSubmit={handleSubmit} className="contact-form">
-            {error && <div className="error-message">{error}</div>}
-            <div className="form-group"><label>Name:</label><input type="text" name="name" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} required className="retro-input" /></div>
-            <div className="form-group"><label>Email:</label><input type="email" name="email" value={formData.email} onChange={(e)=>setFormData({...formData, email:e.target.value})} required className="retro-input" /></div>
-            <div className="form-group"><label>Message:</label><textarea name="message" value={formData.message} onChange={(e)=>setFormData({...formData, message:e.target.value})} required rows="5" className="retro-textarea" /></div>
-            <RetroButton type="submit" disabled={sending}>{sending ? <>🔄 Sending...</> : <>📨 Send Message</>}</RetroButton>
-          </form>
-        )}
-      </RetroWindow>
-    </div>
+    <RetroWindow title="📬 Contact Me" className="main-content">
+      {sent ? (<div className="success-message">✅ Message sent successfully! I'll get back to you soon.</div>) : (
+        <form onSubmit={handleSubmit} className="contact-form">
+          {error && <div className="error-message">{error}</div>}
+          <div className="form-group"><label>Name:</label><input type="text" name="name" value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} required className="retro-input" /></div>
+          <div className="form-group"><label>Email:</label><input type="email" name="email" value={formData.email} onChange={(e)=>setFormData({...formData, email:e.target.value})} required className="retro-input" /></div>
+          <div className="form-group"><label>Message:</label><textarea name="message" value={formData.message} onChange={(e)=>setFormData({...formData, message:e.target.value})} required rows="5" className="retro-textarea" /></div>
+          <RetroButton type="submit" disabled={sending}>{sending ? <>🔄 Sending...</> : <>📨 Send Message</>}</RetroButton>
+        </form>
+      )}
+    </RetroWindow>
   );
 };
 
