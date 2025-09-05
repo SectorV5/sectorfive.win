@@ -14,7 +14,7 @@ from PIL import Image
 import uuid
 
 # Configuration
-BASE_URL = "https://b02b7907-6a5f-480d-87c5-dd6c135355f1.preview.emergentagent.com/api"
+BASE_URL = "https://retrodevkit.preview.emergentagent.com/api"
 INTERNAL_URL = "http://localhost:8001/api"
 
 class BackendTester:
