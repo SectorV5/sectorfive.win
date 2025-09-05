@@ -1581,7 +1581,7 @@ async def get_robots_txt():
 @api_router.get("/sitemap.xml")
 async def get_sitemap():
     """Generate dynamic sitemap"""
-    base_url = "https://sectorfive.win"  # Should be configurable
+    base_url = "https://example.com"  # Should be configurable via environment variables
     
     # Get all published blog posts
     posts = await db.blog_posts.find({"published": True}).sort("updated_at", -1).to_list(length=None)
