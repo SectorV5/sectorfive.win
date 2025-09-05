@@ -206,7 +206,7 @@ backup_data() {
     cd "$ROOT_DIR"
     
     # Check if containers are running
-    if ! docker-compose ps | grep -q "Up"; then
+    if ! docker_compose_cmd ps | grep -q "Up"; then
         echo -e "${RED}Containers are not running. Please start the application first.${NC}"
         return 1
     fi
