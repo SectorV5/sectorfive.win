@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 ROOT_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
-echo -e "${BLUE}Sectorfive Website - Local Development Setup${NC}"
+echo -e "${BLUE}Personal Website Template - Local Development Setup${NC}"
 echo "=============================================="
 
 # Check if MongoDB is running
