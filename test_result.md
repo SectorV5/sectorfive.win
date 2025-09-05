@@ -122,6 +122,9 @@
         - working: true
           agent: "testing"
           comment: "Admin onboarding flow fully tested and working: 1) Startup creates admin/admin with must_change_password=true 2) Login with admin/admin returns token and must_change_password=true 3) /api/me returns must_change_password=true 4) /api/change-credentials successfully changes to newadmin/newpass and sets must_change_password=false 5) Login with newadmin/newpass works with must_change_password=false 6) Old admin/admin credentials properly rejected. All authentication flows working correctly."
+        - working: true
+          agent: "testing"
+          comment: "COMPREHENSIVE ADMIN LOGIN VERIFICATION: Tested complete admin/admin default credentials functionality as requested by user. ✅ Default admin user (admin/admin) created on startup with must_change_password=true ✅ Login with admin/admin successful, returns JWT token ✅ Password change requirement system working ✅ First-setup credential change flow functional ✅ Security measures (old credential rejection, invalid credential rejection) working ✅ JWT token validation operational. The admin/admin login system is fully functional and secure. User-reported login issues appear resolved - system working as designed."
   
   - task: "Content Management (Pages)"
     implemented: true
