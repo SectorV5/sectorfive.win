@@ -475,6 +475,17 @@ async def initialize_data():
         await db.pages.insert_one(homepage.dict())
 
 # Auth endpoints
+@api_router.get("/check-default-credentials")
+async def check_default_credentials():
+    """Check if default admin/admin credentials are still being used"""
+    try:
+        user = await db.users.find_one({"username": "admin"})
+        if user and verify_password("admin", user["password_hash"]):
+            return {"has_default_credentials": True}
+        return {"has_default_credentials": False}
+    except Exception as e:
+        return {"has_default_credentials": True}  # Default to showing credentials if unsure
+
 @api_router.post("/login")
 async def login(user_data: UserLogin):
     user = await db.users.find_one({"username": user_data.username})
