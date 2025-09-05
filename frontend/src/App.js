@@ -75,6 +75,20 @@ const ModernWindow = ({ title, children, className = "" }) => (
   </div>
 );
 
+// Modern Button Component
+const ModernButton = ({ children, onClick, disabled, type, className }) => {
+  return (
+    <button 
+      type={type || 'button'} 
+      onClick={onClick} 
+      disabled={disabled}
+      className={`modern-button ${className || ''}`}
+    >
+      {children}
+    </button>
+  );
+};
+
 const Footer = () => {
   return (
     <footer className="modern-footer">
