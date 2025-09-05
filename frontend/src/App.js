@@ -723,6 +723,7 @@ const AdminPages = () => {
 
 const AdminBlog = () => {
   const [blogData, setBlogData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState('');
@@ -739,6 +740,7 @@ const AdminBlog = () => {
   useEffect(() => { fetchPosts(); }, [search, filterTags, filterAuthor, showDrafts, page]);
   
   const fetchPosts = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
