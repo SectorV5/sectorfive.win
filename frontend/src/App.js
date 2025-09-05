@@ -627,7 +627,6 @@ const FirstSetup = () => {
           <RetroButton type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save & Continue'}</RetroButton>
         </form>
       </RetroWindow>
-    </div>
   );
 };
 
