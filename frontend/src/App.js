@@ -1465,6 +1465,7 @@ function App() {
               <Route path="/page/:slug" element={<PageView />} />
             </Routes>
           </main>
+          <Footer />
         </BrowserRouter>
       </div>
     </AuthProvider>
