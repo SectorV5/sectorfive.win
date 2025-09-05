@@ -144,7 +144,7 @@ deploy_app() {
 stop_app() {
     echo -e "${YELLOW}Stopping Personal Website...${NC}"
     cd "$ROOT_DIR"
-    docker-compose down --remove-orphans
+    docker_compose_cmd down --remove-orphans
     echo -e "${GREEN}Application stopped successfully!${NC}"
 }
 
