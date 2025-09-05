@@ -146,7 +146,13 @@ def test_change_credentials(token):
         "password": "newpassword123"
     }
     
-    response = make_request("POST", "/change-credentials", change_data, headers)
+    # Use requests.post with data parameter for form data
+    url = f"{BACKEND_URL}/change-credentials"
+    try:
+        response = requests.post(url, data=change_data, headers=headers, timeout=10)
+    except requests.exceptions.RequestException as e:
+        log_test("Change Credentials Test", "FAIL", f"Request exception: {str(e)}")
+        return None
     
     if not response:
         log_test("Change Credentials Test", "FAIL", "No response from change-credentials endpoint")
