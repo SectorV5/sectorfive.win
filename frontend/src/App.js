@@ -179,25 +179,26 @@ const Blog = () => {
   if (loading) return <div className="loading">Loading blog posts...</div>;
   
   return (
-    <RetroWindow title="📝 Blog Posts" className="main-content">
+    <ModernWindow title="📝 Blog Posts" className="main-content">
       {/* Search and Filter Controls */}
       <div className="blog-controls">
-          <div className="search-section">
-            <input 
-              type="text" 
-              placeholder="Search posts..." 
-              value={search} 
-              onChange={(e)=>setSearch(e.target.value)} 
-              className="retro-input" 
-            />
-            <input 
-              type="text" 
-              placeholder="Filter by tags (comma-separated)..." 
-              value={selectedTags} 
-              onChange={(e)=>setSelectedTags(e.target.value)} 
-              className="retro-input" 
-            />
-          </div>
+        <div className="search-controls">
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="modern-input"
+          />
+          <input
+            type="text"
+            placeholder="Filter by tags (comma-separated)..."
+            value={selectedTags}
+            onChange={(e) => setSelectedTags(e.target.value)}
+            className="modern-input"
+          />
+        </div>
+      </div>
           
           {/* Tag Cloud */}
           {allTags.length > 0 && (
