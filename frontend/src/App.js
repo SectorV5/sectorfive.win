@@ -250,7 +250,7 @@ const Blog = () => {
                   )}
                   
                   <div className="post-content">
-                    {post.excerpt || (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content)}
+                    {post.excerpt || (post.content && post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content || '')}
                   </div>
                   
                   <Link to={`/blog/${post.slug}`} className="read-more">Read More →</Link>
